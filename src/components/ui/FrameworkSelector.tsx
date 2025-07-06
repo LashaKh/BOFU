@@ -81,115 +81,108 @@ export const FrameworkSelector: React.FC<FrameworkSelectorProps> = ({
   className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const selectedFramework = frameworks.find(f => f.id === value);
 
+  const handleToggle = () => {
+    if (!disabled) {
+      if (!isOpen && buttonRef.current) {
+        setButtonRect(buttonRef.current.getBoundingClientRect());
+      }
+      setIsOpen(!isOpen);
+    }
+  };
+
   const handleSelect = (frameworkId: string) => {
     onSelect(frameworkId);
+    setIsOpen(false); // Close dropdown after selection
+  };
+
+  const handleClickOutside = () => {
     setIsOpen(false);
   };
 
-  const updateDropdownPosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX,
-        width: rect.width
-      });
-    }
-  };
-
+  // Update button position when window resizes or scrolls
   useEffect(() => {
-    if (isOpen) {
-      updateDropdownPosition();
-      
-      const handleScroll = () => updateDropdownPosition();
-      const handleResize = () => updateDropdownPosition();
-      
-      window.addEventListener('scroll', handleScroll, true);
-      window.addEventListener('resize', handleResize);
-      
-      return () => {
-        window.removeEventListener('scroll', handleScroll, true);
-        window.removeEventListener('resize', handleResize);
-      };
-    }
+    if (!isOpen) return;
+
+    const updatePosition = () => {
+      if (buttonRef.current) {
+        setButtonRect(buttonRef.current.getBoundingClientRect());
+      }
+    };
+
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [isOpen]);
 
-  const dropdownContent = (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Overlay */}
-          <div 
-            className="fixed inset-0 z-[999998]" 
-            onClick={() => setIsOpen(false)}
-            style={{ zIndex: 999998 }}
-          />
-          
-          {/* Dropdown */}
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed z-[999999] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden"
-            style={{ 
-              zIndex: 999999,
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              width: dropdownPosition.width,
-              maxHeight: '300px'
-            }}
-          >
-            <div className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-500">
-              {frameworks.map((framework, index) => (
-                <motion.button
-                  key={framework.id}
-                  type="button"
-                  onClick={() => handleSelect(framework.id)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`
-                    w-full p-4 text-left transition-all duration-200 border-b border-gray-100 last:border-b-0
-                    ${framework.bgColor}
-                    ${value === framework.id ? 'ring-2 ring-blue-500 ring-inset' : ''}
-                  `}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${framework.gradient} text-white shadow-sm flex-shrink-0`}>
-                      {framework.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <div className={`font-semibold ${framework.color}`}>{framework.name}</div>
-                        {value === framework.id && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="p-1 bg-blue-500 rounded-full"
-                          >
-                            <Check className="w-3 h-3 text-white" />
-                          </motion.div>
-                        )}
+  const dropdownContent = isOpen && buttonRect ? (
+    <div>
+      {/* Overlay */}
+      <div 
+        className="fixed inset-0 z-[9999998]"
+        onClick={handleClickOutside}
+      />
+      
+      {/* Dropdown */}
+      <motion.div
+        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="fixed z-[9999999] bg-white border border-gray-200 rounded-xl shadow-2xl"
+        style={{
+          top: buttonRect.bottom + window.scrollY + 8,
+          left: buttonRect.left + window.scrollX,
+          width: buttonRect.width,
+          maxHeight: '400px',
+          zIndex: 9999999
+        }}
+      >
+        <div className="max-h-[400px] overflow-y-auto">
+          {frameworks.map((framework, index) => (
+            <button
+              key={framework.id}
+              type="button"
+              onClick={() => handleSelect(framework.id)}
+              className={`
+                w-full p-4 text-left transition-all duration-200 border-b border-gray-100 last:border-b-0
+                ${framework.bgColor}
+                ${value === framework.id ? 'ring-2 ring-blue-500 ring-inset bg-blue-50' : ''}
+                hover:bg-gray-50
+              `}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-lg ${framework.gradient} text-white shadow-sm flex-shrink-0`}>
+                  {framework.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <div className={`font-semibold ${framework.color}`}>{framework.name}</div>
+                    {value === framework.id && (
+                      <div className="p-1 bg-blue-500 rounded-full">
+                        <Check className="w-3 h-3 text-white" />
                       </div>
-                      <div className="text-sm text-gray-600 mt-1 leading-relaxed">
-                        {framework.description}
-                      </div>
-                    </div>
+                    )}
                   </div>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
+                  <div className="text-sm text-gray-600 mt-1 leading-relaxed">
+                    {framework.description}
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  ) : null;
 
   return (
     <div className={`relative ${className}`}>
@@ -197,7 +190,7 @@ export const FrameworkSelector: React.FC<FrameworkSelectorProps> = ({
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         disabled={disabled}
         className={`
           w-full p-4 border border-gray-300 rounded-xl bg-white text-left
@@ -240,7 +233,7 @@ export const FrameworkSelector: React.FC<FrameworkSelectorProps> = ({
       </button>
 
       {/* Portal for dropdown */}
-      {typeof document !== 'undefined' && createPortal(dropdownContent, document.body)}
+      {typeof document !== 'undefined' && dropdownContent && createPortal(dropdownContent, document.body)}
     </div>
   );
 }; 

@@ -922,57 +922,7 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
     };
   }, [articleId, adminUser]);
 
-  // Update cursor position when editor selection changes
-  useEffect(() => {
-    if (!editor || !isCollaborationReady) return;
-
-    const updateCursorPosition = () => {
-      const selection = editor.state.selection;
-      const from = selection.from;
-      const to = selection.to;
-      
-      // Get the DOM position for the cursor
-      const coords = editor.view.coordsAtPos(from);
-      const editorRect = editorRef.current?.getBoundingClientRect();
-      
-      if (editorRect) {
-        const cursorPosition = {
-          from,
-          to,
-          x: coords.left - editorRect.left,
-          y: coords.top - editorRect.top,
-          selection: from !== to ? { anchor: from, head: to } : undefined
-        };
-        
-        realtimeCollaboration.updateCursorPosition(cursorPosition);
-      }
-    };
-
-    // Listen to selection updates
-    const handleSelectionUpdate = () => {
-      updateCursorPosition();
-      // Update status to editing when user is actively selecting/typing
-      if (articleId) {
-        realtimeCollaboration.updatePresence(articleId, 'editing');
-      }
-    };
-
-    const handleTransaction = () => {
-      // Update status to editing on any transaction (typing, formatting, etc.)
-      if (articleId) {
-        realtimeCollaboration.updatePresence(articleId, 'editing');
-      }
-    };
-
-    // Add event listeners
-    editor.on('selectionUpdate', handleSelectionUpdate);
-    editor.on('transaction', handleTransaction);
-
-    return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
-      editor.off('transaction', handleTransaction);
-    };
-  }, [editor, isCollaborationReady, articleId]);
+  // Note: Cursor position update effect moved after editor definition
 
   // Load article content when articleId is provided
   useEffect(() => {
@@ -1192,6 +1142,60 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
       editor.view.updateState(editor.view.state);
     }
   }, [highlightedCommentId, editor]);
+
+  // Update cursor position when editor selection changes
+  useEffect(() => {
+    if (!editor || !isCollaborationReady) return;
+
+    const updateCursorPosition = () => {
+      const selection = editor.state.selection;
+      const from = selection.from;
+      const to = selection.to;
+      
+      // Get the DOM position for the cursor
+      const coords = editor.view.coordsAtPos(from);
+      const editorRect = editorRef.current?.getBoundingClientRect();
+      
+      if (editorRect) {
+        const cursorPosition = {
+          from,
+          to,
+          x: coords.left - editorRect.left,
+          y: coords.top - editorRect.top,
+          selection: from !== to ? { anchor: from, head: to } : undefined
+        };
+        
+        realtimeCollaboration.updateCursorPosition(cursorPosition);
+      }
+    };
+
+    // Listen to selection updates
+    const handleSelectionUpdate = () => {
+      updateCursorPosition();
+      // Update status to editing when user is actively selecting/typing
+      if (articleId) {
+        realtimeCollaboration.updatePresence(articleId, 'editing');
+      }
+    };
+
+    const handleTransaction = () => {
+      // Update status to editing on any transaction (typing, formatting, etc.)
+      if (articleId) {
+        realtimeCollaboration.updatePresence(articleId, 'editing');
+      }
+    };
+
+    // Add event listeners
+    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor.on('transaction', handleTransaction);
+
+    return () => {
+      if (editor && !editor.isDestroyed) {
+        editor.off('selectionUpdate', handleSelectionUpdate);
+        editor.off('transaction', handleTransaction);
+      }
+    };
+  }, [editor, isCollaborationReady, articleId]);
 
   // Auto-save functionality with stable debounced function
   const debouncedAutoSave = useMemo(
