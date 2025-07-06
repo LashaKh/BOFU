@@ -216,14 +216,26 @@ export async function getApprovedProducts(): Promise<any[]> {
     return (data || []).map(item => {
       const userProfile = item.research_results?.user_profiles;
       
+      // Enhanced framework loading with fallback and debug logging
+      const frameworkFromColumn = item.framework;
+      const frameworkFromJson = item.product_data?.framework;
+      const finalFramework = frameworkFromColumn || frameworkFromJson;
+      
+      console.log(`[research] Loading product ${item.product_name}:`, {
+        frameworkFromColumn,
+        frameworkFromJson,
+        finalFramework,
+        willUseFramework: finalFramework
+      });
+      
       return {
         ...item,
         product_data: {
           ...item.product_data,
           research_result_id: item.research_result_id,
           product_id: item.product_id,
-          // Include framework from approved_products table
-          framework: item.framework,
+          // Include framework from approved_products table (with fallback to JSON)
+          framework: finalFramework,
           // Add user information to the product data
           userEmail: userProfile?.email,
           userCompanyName: userProfile?.company_name,
@@ -244,16 +256,30 @@ export async function getApprovedProducts(): Promise<any[]> {
       if (fallbackError) throw fallbackError;
       
       console.log('[research] Using fallback query without user info');
-      return (fallbackData || []).map(item => ({
-        ...item,
-        product_data: {
-          ...item.product_data,
-          research_result_id: item.research_result_id,
-          product_id: item.product_id,
-          // Include framework from approved_products table
-          framework: item.framework
-        }
-      }));
+      return (fallbackData || []).map(item => {
+        // Enhanced framework loading with fallback and debug logging (fallback query)
+        const frameworkFromColumn = item.framework;
+        const frameworkFromJson = item.product_data?.framework;
+        const finalFramework = frameworkFromColumn || frameworkFromJson;
+        
+        console.log(`[research] Loading product ${item.product_name} (fallback):`, {
+          frameworkFromColumn,
+          frameworkFromJson,
+          finalFramework,
+          willUseFramework: finalFramework
+        });
+        
+        return {
+          ...item,
+          product_data: {
+            ...item.product_data,
+            research_result_id: item.research_result_id,
+            product_id: item.product_id,
+            // Include framework from approved_products table (with fallback to JSON)
+            framework: finalFramework
+          }
+        };
+      });
     } catch (fallbackError) {
       console.error('[research] Fallback query also failed:', fallbackError);
       throw fallbackError;
