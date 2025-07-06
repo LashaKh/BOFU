@@ -9,7 +9,6 @@ import { SaveStatusIndicator } from './SaveStatusIndicator';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import { CompetitorAnalysis } from './CompetitorAnalysis';
 import { ImageUploader } from '../ui/ImageUploader';
-import { FrameworkSelector } from '../ui/FrameworkSelector';
 import { useAuth } from '../../lib/auth';
 import { deleteCapabilityImage, UploadResult } from '../../lib/storage';
 import { X, Plus, ChevronDown, ChevronUp } from 'lucide-react';
@@ -23,8 +22,7 @@ const CollapsibleSection = ({
   gradientColors,
   accentColor,
   defaultExpanded = true,
-  count,
-  allowOverflow = false
+  count
 }: { 
   title: string; 
   description: string;
@@ -34,7 +32,6 @@ const CollapsibleSection = ({
   accentColor: string;
   defaultExpanded?: boolean;
   count?: number;
-  allowOverflow?: boolean;
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -122,10 +119,10 @@ const CollapsibleSection = ({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.4, ease: 'easeInOut' }}
-            className={allowOverflow ? "overflow-visible" : "overflow-hidden"}
+            className="overflow-hidden"
           >
             <div 
-              className="relative rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 p-6"
+              className="relative overflow-hidden rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 p-6"
               style={{
                 background: `
                   linear-gradient(135deg, 
@@ -135,7 +132,6 @@ const CollapsibleSection = ({
                   )
                 `,
                 backdropFilter: 'blur(20px) saturate(180%)',
-                overflow: allowOverflow ? 'visible' : 'hidden'
               }}
             >
               {/* Content background pattern */}
@@ -842,8 +838,6 @@ export function ProductCardContent({
           </div>
         </CollapsibleSection>
 
-
-
         {/* Features and Capabilities - Enhanced Production-Ready Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1303,163 +1297,368 @@ export function ProductCardContent({
         </div>
       )}
 
-      {/* Framework Selection - Admin Only */}
+      {/* Framework Selection Section - Admin Only */}
       {context === 'admin' && (
-        <div className="mt-8">
-          <CollapsibleSection
-            title="Content Framework Selection"
-            description="Choose the content framework that best fits your product strategy"
-            icon={
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            }
-            gradientColors="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-600"
-            accentColor="bg-indigo-400"
-            defaultExpanded={sectionsExpanded}
-            count={editableProduct.contentFramework ? 1 : 0}
-            allowOverflow={true}
-          >
-            <div className="space-y-4" style={{ overflow: 'visible' }}>
-              {/* Framework Selector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  <span className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <CollapsibleSection
+          title="Content Framework"
+          description="Select the strategic framework for content generation"
+          icon={
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          }
+          gradientColors="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"
+          accentColor="bg-blue-500"
+          defaultExpanded={sectionsExpanded}
+          count={editableProduct.framework ? 1 : 0}
+        >
+          <div className="space-y-6">
+            {/* Framework Selection Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {[
+                {
+                  id: 'product-walkthrough',
+                  title: 'Product Walkthrough Framework',
+                  description: 'Ideal for step-by-step overviews of how the product works',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Content Framework
-                    <span className="text-xs text-gray-500 font-normal">
-                      ({editableProduct.contentFramework ? 'Selected' : 'Not selected'})
-                    </span>
-                  </span>
-                </label>
+                  ),
+                  gradient: 'from-emerald-500 to-teal-600',
+                  hoverGradient: 'from-emerald-600 to-teal-700',
+                  bgPattern: 'from-emerald-50 to-teal-50',
+                  borderColor: 'border-emerald-200'
+                },
+                {
+                  id: 'differentiation',
+                  title: 'Differentiation Framework',
+                  description: 'Highlights how this product stands out from the competition to build trust and reduce the need for comparison',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  ),
+                  gradient: 'from-amber-500 to-orange-600',
+                  hoverGradient: 'from-amber-600 to-orange-700',
+                  bgPattern: 'from-amber-50 to-orange-50',
+                  borderColor: 'border-amber-200'
+                },
+                {
+                  id: 'triple-threat',
+                  title: 'Triple Threat Framework',
+                  description: 'Used to compare three or more solutions, emphasizing our value proposition while acknowledging competitor strengths',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  ),
+                  gradient: 'from-purple-500 to-indigo-600',
+                  hoverGradient: 'from-purple-600 to-indigo-700',
+                  bgPattern: 'from-purple-50 to-indigo-50',
+                  borderColor: 'border-purple-200'
+                },
+                {
+                  id: 'case-study',
+                  title: 'Case Study Framework',
+                  description: 'Builds credibility by showcasing real-world results and testimonials from existing customers',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  ),
+                  gradient: 'from-rose-500 to-pink-600',
+                  hoverGradient: 'from-rose-600 to-pink-700',
+                  bgPattern: 'from-rose-50 to-pink-50',
+                  borderColor: 'border-rose-200'
+                },
+                {
+                  id: 'benefit',
+                  title: 'Benefit Framework',
+                  description: 'Focuses on the core benefits of the product based on common user pain points and goals',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  ),
+                  gradient: 'from-cyan-500 to-blue-600',
+                  hoverGradient: 'from-cyan-600 to-blue-700',
+                  bgPattern: 'from-cyan-50 to-blue-50',
+                  borderColor: 'border-cyan-200'
+                }
+              ].map((framework, index) => {
+                const isSelected = editableProduct.framework === framework.id;
+                return (
+                  <motion.div
+                    key={framework.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    className={`
+                      relative overflow-hidden rounded-xl border-2 transition-all duration-300 cursor-pointer group
+                      ${isSelected 
+                        ? `${framework.borderColor} shadow-lg scale-[1.02] ring-2 ring-blue-400/30` 
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md hover:scale-[1.01]'
+                      }
+                    `}
+                    onClick={() => {
+                      if (enableEditing) {
+                        const newFramework = isSelected ? undefined : framework.id;
+                        updateField('framework', newFramework);
+                      }
+                    }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {/* Background Pattern */}
+                    <div 
+                      className={`
+                        absolute inset-0 opacity-30 bg-gradient-to-br 
+                        ${isSelected ? framework.bgPattern : 'from-gray-50 to-white'}
+                      `}
+                    >
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(120,119,198,0.1),transparent_60%)]"></div>
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,119,198,0.1),transparent_60%)]"></div>
+                    </div>
 
-                <FrameworkSelector
-                  value={editableProduct.contentFramework}
-                  onSelect={(frameworkId) => updateField('contentFramework', frameworkId)}
-                  disabled={!enableEditing}
-                  className="w-full"
-                />
-              </div>
+                    {/* Selection Indicator */}
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          className="absolute top-3 right-3 z-10"
+                        >
+                          <div className={`p-1.5 bg-gradient-to-r ${framework.gradient} rounded-full shadow-lg`}>
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                            </svg>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-              {/* Admin Instructions */}
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div className="text-xs text-blue-700">
-                    <p className="font-medium mb-1">Framework Selection:</p>
-                    <p>Choose the content framework that best aligns with your product's content strategy and marketing goals. This will guide the structure and approach of content briefs generated through AirOps integration.</p>
+                    <div className="relative z-10 p-6">
+                      {/* Icon and Title */}
+                      <div className="flex items-start gap-4 mb-3">
+                        <div 
+                          className={`
+                            p-3 rounded-xl shadow-sm transition-all duration-300
+                            ${isSelected 
+                              ? `bg-gradient-to-r ${framework.gradient} text-white shadow-lg transform scale-110` 
+                              : 'bg-white text-gray-600 group-hover:bg-gray-50'
+                            }
+                          `}
+                        >
+                          {framework.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className={`
+                            font-bold text-lg leading-tight transition-colors duration-200
+                            ${isSelected ? 'text-gray-900' : 'text-gray-800 group-hover:text-gray-900'}
+                          `}>
+                            {framework.title}
+                          </h5>
+                          {isSelected && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="mt-1"
+                            >
+                              <span className={`
+                                inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                bg-gradient-to-r ${framework.gradient} text-white shadow-sm
+                              `}>
+                                Selected
+                              </span>
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <p className={`
+                        text-sm leading-relaxed transition-colors duration-200
+                        ${isSelected ? 'text-gray-700' : 'text-gray-600 group-hover:text-gray-700'}
+                      `}>
+                        {framework.description}
+                      </p>
+
+                      {/* Bottom Gradient Line */}
+                      <div className={`
+                        absolute bottom-0 left-0 right-0 h-1 transition-all duration-300
+                        ${isSelected 
+                          ? `bg-gradient-to-r ${framework.gradient} opacity-100` 
+                          : 'bg-gray-200 opacity-0 group-hover:opacity-50'
+                        }
+                      `} />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Current Selection Display */}
+            {editableProduct.framework && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl border border-blue-200/60">
+                  <div className="flex items-center gap-3 mb-2">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h6 className="font-semibold text-blue-900">Selected Framework</h6>
                   </div>
+                  <p className="text-sm text-blue-800 font-medium">
+                    {(() => {
+                      const frameworkMap = {
+                        'product-walkthrough': 'Product Walkthrough Framework',
+                        'differentiation': 'Differentiation Framework',
+                        'triple-threat': 'Triple Threat Framework',
+                        'case-study': 'Case Study Framework',
+                        'benefit': 'Benefit Framework'
+                      };
+                      return frameworkMap[editableProduct.framework as keyof typeof frameworkMap] || editableProduct.framework;
+                    })()}
+                  </p>
                 </div>
-              </div>
+              </motion.div>
+            )}
 
-              {/* Admin Badge */}
-              <div className="flex justify-end">
-                <div className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">
-                  Admin
+            {/* Clear Selection Button */}
+            {editableProduct.framework && enableEditing && (
+              <div className="flex justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => updateField('framework', undefined)}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <X className="w-4 h-4" />
+                  Clear Selection
+                </motion.button>
+              </div>
+            )}
+
+            {/* Admin Instructions */}
+            <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200/60">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-sm text-purple-800">
+                  <p className="font-semibold mb-1">Framework Selection Guide:</p>
+                  <p>Choose the strategic approach that best aligns with your content goals. This framework will guide the tone, structure, and focus of generated content briefs and articles.</p>
                 </div>
               </div>
             </div>
-          </CollapsibleSection>
-        </div>
+
+            {/* Admin Badge */}
+            <div className="flex justify-end">
+              <div className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-200">
+                Admin Only
+              </div>
+            </div>
+          </div>
+        </CollapsibleSection>
       )}
 
       {/* Keywords Section - Admin Only */}
       {context === 'admin' && (
-        <div className="mt-8">
-          <CollapsibleSection
-            title="Keywords & Tags"
-            description="Identify and manage keywords for content brief generation"
-            icon={
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-            }
-            gradientColors="bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600"
-            accentColor="bg-yellow-400"
-            defaultExpanded={sectionsExpanded}
-            count={editableProduct.keywords?.length}
-          >
-            <div className="space-y-4">
-              {/* Keywords Display and Management */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  <span className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
-                    Content Keywords
-                    <span className="text-xs text-gray-500 font-normal">
-                      ({(editableProduct.keywords || []).length} keyword{(editableProduct.keywords || []).length !== 1 ? 's' : ''})
-                    </span>
-                  </span>
-                </label>
-
-                <EditableField
-                  label=""
-                  value={editableProduct.keywords || []}
-                  onSave={(value) => updateField('keywords', value)}
-                  type="array"
-                  arrayItemPlaceholder="Add keyword (e.g., automation, productivity, SaaS, analytics)..."
-                  disabled={!enableEditing}
-                  className="rounded-lg"
-                />
-              </div>
-
-              {/* Keywords Preview */}
-              {editableProduct.keywords && editableProduct.keywords.length > 0 && (
-                <div className="mt-4 p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                  <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Keyword Tags
-                  </h5>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {editableProduct.keywords.map((keyword, index) => (
-                      <motion.span
-                        key={index}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.2, delay: index * 0.05 }}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-medium rounded-full shadow-sm hover:shadow-md transition-all duration-200"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        {keyword}
-                      </motion.span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Admin Instructions */}
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <CollapsibleSection
+          title="Keywords & Tags"
+          description="Identify and manage keywords for content brief generation"
+          icon={
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+          }
+          gradientColors="bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600"
+          accentColor="bg-yellow-400"
+          defaultExpanded={sectionsExpanded}
+          count={editableProduct.keywords?.length}
+        >
+          <div className="space-y-4">
+            {/* Keywords Display and Management */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                <span className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
-                  <div className="text-xs text-blue-700">
-                    <p className="font-medium mb-1">Admin Keywords:</p>
-                    <p>These keywords will be included when sending data to AirOps for content brief generation. Keywords help improve content relevance and SEO targeting.</p>
-                  </div>
+                  Content Keywords
+                  <span className="text-xs text-gray-500 font-normal">
+                    ({(editableProduct.keywords || []).length} keyword{(editableProduct.keywords || []).length !== 1 ? 's' : ''})
+                  </span>
+                </span>
+              </label>
+
+              <EditableField
+                label=""
+                value={editableProduct.keywords || []}
+                onSave={(value) => updateField('keywords', value)}
+                type="array"
+                arrayItemPlaceholder="Add keyword (e.g., automation, productivity, SaaS, analytics)..."
+                disabled={!enableEditing}
+                className="rounded-lg"
+              />
+            </div>
+
+            {/* Keywords Preview */}
+            {editableProduct.keywords && editableProduct.keywords.length > 0 && (
+              <div className="mt-4 p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Keyword Tags
+                </h5>
+                
+                <div className="flex flex-wrap gap-2">
+                  {editableProduct.keywords.map((keyword, index) => (
+                    <motion.span
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-medium rounded-full shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      {keyword}
+                    </motion.span>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {/* Admin Badge */}
-              <div className="flex justify-end">
-                <div className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
-                  Admin
+            {/* Admin Instructions */}
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-xs text-blue-700">
+                  <p className="font-medium mb-1">Admin Keywords:</p>
+                  <p>These keywords will be included when sending data to AirOps for content brief generation. Keywords help improve content relevance and SEO targeting.</p>
                 </div>
               </div>
             </div>
-          </CollapsibleSection>
-        </div>
+
+            {/* Admin Badge */}
+            <div className="flex justify-end">
+              <div className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                Admin
+              </div>
+            </div>
+          </div>
+        </CollapsibleSection>
       )}
 
       {/* Advanced sections - only show when expanded and needed */}

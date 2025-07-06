@@ -50,8 +50,8 @@ export interface ProductAnalysis {
     images?: string[];
   }>;
   competitors?: CompetitorsData;
-  keywords?: string[]; // New field for admin-managed keywords
-  contentFramework?: string; // New field for framework selection (admin-only)
+  framework?: string; // New field for framework selection
+  keywords?: string[]; // Admin-managed keywords
   isApproved?: boolean;
   approvedBy?: string;
 }
@@ -147,8 +147,8 @@ export const defaultProduct: ProductAnalysis = {
     niche_competitors: [],
     broader_competitors: []
   },
+  framework: undefined,
   keywords: [],
-  contentFramework: undefined, // New field for framework selection
   isApproved: false,
   approvedBy: undefined
 };
