@@ -240,6 +240,11 @@ export async function sendToAirOps(productData: AirOpsProductInput) {
     // Log what we're sending
     console.log('================================');
     console.log('Research Result ID to be sent:', formattedProductData.research_result_Id);
+    console.log('🎯 Framework being sent to AirOps:', {
+      framework: formattedProductData.product_card_information.framework,
+      frameworkType: typeof formattedProductData.product_card_information.framework,
+      hasFramework: !!formattedProductData.product_card_information.framework
+    });
     console.log('Full request payload:', {
       inputs: {
         product_card_information: formattedProductData.product_card_information,

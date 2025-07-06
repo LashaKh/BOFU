@@ -439,6 +439,13 @@ export function ProductCardActions({
           research_result_Id: trackingId
         };
 
+        // Log framework being sent to AirOps for verification
+        console.log('🎯 Framework being sent to AirOps:', {
+          framework: product.framework,
+          frameworkType: typeof product.framework,
+          hasFramework: !!product.framework
+        });
+
         await sendToAirOps(airOpsData);
         toast.success('Successfully sent to AirOps for processing');
       } catch (error: any) {
