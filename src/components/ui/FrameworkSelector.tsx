@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronDown, FileText, TrendingUp, Users, Award, Target } from 'lucide-react';
 
@@ -75,8 +75,6 @@ interface FrameworkSelectorProps {
 
 export function FrameworkSelector({ value, onSelect, disabled = false, className = '' }: FrameworkSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const selectedFramework = frameworks.find(f => f.id === value);
 
   const handleSelect = (frameworkId: string) => {
@@ -84,152 +82,127 @@ export function FrameworkSelector({ value, onSelect, disabled = false, className
     setIsOpen(false);
   };
 
-  const updateDropdownPosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX,
-        width: rect.width
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      updateDropdownPosition();
-      
-      const handleScroll = () => updateDropdownPosition();
-      const handleResize = () => updateDropdownPosition();
-      
-      window.addEventListener('scroll', handleScroll, true);
-      window.addEventListener('resize', handleResize);
-      
-      return () => {
-        window.removeEventListener('scroll', handleScroll, true);
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, [isOpen]);
-
   return (
-    <div className={`relative ${className}`}>
-      {/* Dropdown Button */}
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={disabled}
-        className={`
-          w-full p-4 rounded-xl border-2 transition-all duration-300 text-left
-          ${disabled 
-            ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60' 
-            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-lg cursor-pointer'
-          }
-          ${isOpen ? 'border-blue-400 shadow-lg' : ''}
-        `}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {selectedFramework ? (
-              <>
-                <div className={`p-2 rounded-lg ${selectedFramework.gradient} text-white shadow-sm`}>
-                  {selectedFramework.icon}
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">{selectedFramework.name}</div>
-                  <div className="text-sm text-gray-500 mt-1">{selectedFramework.description}</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="p-2 rounded-lg bg-gray-200 text-gray-500">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-700">Select Content Framework</div>
-                  <div className="text-sm text-gray-500 mt-1">Choose the framework that best fits your content strategy</div>
-                </div>
-              </>
-            )}
-          </div>
-          <motion.div
-            animate={{ rotate: isOpen ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          </motion.div>
-        </div>
-      </button>
-
-      {/* Dropdown Menu - Fixed positioned to appear above all elements */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed z-[99999] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden"
-            style={{ 
-              zIndex: 99999,
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              width: dropdownPosition.width,
-              maxHeight: '400px'
-            }}
-          >
-            <div className="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-              {frameworks.map((framework, index) => (
-                <motion.button
-                  key={framework.id}
-                  type="button"
-                  onClick={() => handleSelect(framework.id)}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`
-                    w-full p-4 text-left transition-all duration-200 border-b border-gray-100 last:border-b-0
-                    ${framework.bgColor}
-                    ${value === framework.id ? 'ring-2 ring-blue-500 ring-inset' : ''}
-                  `}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${framework.gradient} text-white shadow-sm flex-shrink-0`}>
-                      {framework.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <div className={`font-semibold ${framework.color}`}>{framework.name}</div>
-                        {value === framework.id && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="p-1 bg-blue-500 rounded-full"
-                          >
-                            <Check className="w-3 h-3 text-white" />
-                          </motion.div>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1 leading-relaxed">
-                        {framework.description}
-                      </div>
-                    </div>
+    <>
+      {/* Main Container */}
+      <div className={`relative ${className}`} style={{ zIndex: 1 }}>
+        {/* Dropdown Button */}
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={disabled}
+          className={`
+            w-full p-4 rounded-xl border-2 transition-all duration-300 text-left
+            ${disabled 
+              ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60' 
+              : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-lg cursor-pointer'
+            }
+            ${isOpen ? 'border-blue-400 shadow-lg' : ''}
+          `}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {selectedFramework ? (
+                <>
+                  <div className={`p-2 rounded-lg ${selectedFramework.gradient} text-white shadow-sm`}>
+                    {selectedFramework.icon}
                   </div>
-                </motion.button>
-              ))}
+                  <div>
+                    <div className="font-semibold text-gray-900">{selectedFramework.name}</div>
+                    <div className="text-sm text-gray-500 mt-1">{selectedFramework.description}</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-2 rounded-lg bg-gray-200 text-gray-500">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-700">Select Content Framework</div>
+                    <div className="text-sm text-gray-500 mt-1">Choose the framework that best fits your content strategy</div>
+                  </div>
+                </>
+              )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <motion.div
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            </motion.div>
+          </div>
+        </button>
 
-      {/* Overlay to close dropdown */}
+        {/* Dropdown Menu */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute z-[99999] w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden"
+              style={{ 
+                zIndex: 99999,
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0
+              }}
+            >
+              <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                {frameworks.map((framework, index) => (
+                  <motion.button
+                    key={framework.id}
+                    type="button"
+                    onClick={() => handleSelect(framework.id)}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`
+                      w-full p-4 text-left transition-all duration-200 border-b border-gray-100 last:border-b-0
+                      ${framework.bgColor}
+                      ${value === framework.id ? 'ring-2 ring-blue-500 ring-inset' : ''}
+                    `}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg ${framework.gradient} text-white shadow-sm flex-shrink-0`}>
+                        {framework.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <div className={`font-semibold ${framework.color}`}>{framework.name}</div>
+                          {value === framework.id && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="p-1 bg-blue-500 rounded-full"
+                            >
+                              <Check className="w-3 h-3 text-white" />
+                            </motion.div>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1 leading-relaxed">
+                          {framework.description}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Overlay to close dropdown - positioned outside main container */}
       {isOpen && (
         <div 
           className="fixed inset-0 z-[99998]" 
           onClick={() => setIsOpen(false)}
+          style={{ zIndex: 99998 }}
         />
       )}
-    </div>
+    </>
   );
 } 

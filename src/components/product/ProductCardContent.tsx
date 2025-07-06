@@ -23,7 +23,8 @@ const CollapsibleSection = ({
   gradientColors,
   accentColor,
   defaultExpanded = true,
-  count
+  count,
+  allowOverflow = false
 }: { 
   title: string; 
   description: string;
@@ -33,6 +34,7 @@ const CollapsibleSection = ({
   accentColor: string;
   defaultExpanded?: boolean;
   count?: number;
+  allowOverflow?: boolean;
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -120,10 +122,10 @@ const CollapsibleSection = ({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.4, ease: 'easeInOut' }}
-            className="overflow-hidden"
+            className={allowOverflow ? "overflow-visible" : "overflow-hidden"}
           >
             <div 
-              className="relative overflow-hidden rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 p-6"
+              className="relative rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 p-6"
               style={{
                 background: `
                   linear-gradient(135deg, 
@@ -133,6 +135,7 @@ const CollapsibleSection = ({
                   )
                 `,
                 backdropFilter: 'blur(20px) saturate(180%)',
+                overflow: allowOverflow ? 'visible' : 'hidden'
               }}
             >
               {/* Content background pattern */}
@@ -1410,8 +1413,9 @@ export function ProductCardContent({
             accentColor="bg-indigo-400"
             defaultExpanded={sectionsExpanded}
             count={editableProduct.contentFramework ? 1 : 0}
+            allowOverflow={true}
           >
-            <div className="space-y-4">
+            <div className="space-y-4" style={{ overflow: 'visible' }}>
               {/* Framework Selector */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
