@@ -72,6 +72,7 @@ export function ContentBriefManagement({ onBack }: ContentBriefManagementProps) 
   const [approvedProducts, setApprovedProducts] = useState<any[]>([]);
   const [isLoadingApproved, setIsLoadingApproved] = useState(true);
   const [autoSaving, setAutoSaving] = useState<{ [key: string]: boolean }>({});
+  const [collapsedContentBriefs, setCollapsedContentBriefs] = useState<Set<string>>(new Set());
 
   // Fetch all users with enhanced company and profile data using admin permissions
   const fetchUsers = async () => {
@@ -1331,6 +1332,14 @@ export function ContentBriefManagement({ onBack }: ContentBriefManagementProps) 
     }
   }, [selectedUserForBriefs]);
 
+  // Set all content briefs to collapsed by default when they load
+  useEffect(() => {
+    if (userContentBriefs.length > 0) {
+      const allBriefIds = new Set(userContentBriefs.map(brief => brief.id));
+      setCollapsedContentBriefs(allBriefIds);
+    }
+  }, [userContentBriefs]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -1438,22 +1447,44 @@ export function ContentBriefManagement({ onBack }: ContentBriefManagementProps) 
                         className="bg-gray-700/40 rounded-lg p-4 border border-gray-600/30 cursor-pointer hover:bg-gray-600/50 transition-colors"
                       >
                         <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-white font-semibold">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="text-xl font-bold text-white leading-tight">
                                 {product?.productDetails?.name || product?.companyName || approvedProduct.product_name || 'Unnamed Product'}
                               </h4>
-                              <div className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 rounded-full">
-                                <CheckCircle className="w-3 h-3 text-green-400" />
-                                <span className="text-xs text-green-400 font-medium">Approved</span>
+                              <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-full border border-green-500/30">
+                                <CheckCircle className="w-4 h-4 text-green-400" />
+                                <span className="text-xs font-medium text-green-300">Approved Product</span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
-                              <span>Approved: {new Date(approvedProduct.approved_at).toLocaleDateString()}</span>
-                              <span>•</span>
-                              <span>Status: {approvedProduct.reviewed_status}</span>
-                              <span>•</span>
-                              <span>Source: {approvedProduct.research_result_id ? `Research ${approvedProduct.research_result_id.slice(0, 8)}...` : `Product Page`}</span>
+                            <div className="flex items-center gap-4 text-sm">
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-600/30 rounded-lg">
+                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span className="text-gray-300 font-medium">Approved</span>
+                                <span className="text-white font-semibold">
+                                  {new Date(approvedProduct.approved_at).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-600/30 rounded-lg">
+                                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                                  <Package className="w-3 h-3 text-white" />
+                                </div>
+                                <span className="text-gray-300 font-medium">Status</span>
+                                <span className="text-white font-semibold capitalize">
+                                  {approvedProduct.reviewed_status}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-600/30 rounded-lg">
+                                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                                <span className="text-gray-300 font-medium">Source</span>
+                                <span className="text-white font-semibold">
+                                  {approvedProduct.research_result_id ? 'Research Data' : 'Product Page'}
+                                </span>
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
@@ -1625,23 +1656,80 @@ export function ContentBriefManagement({ onBack }: ContentBriefManagementProps) 
                   ? companyGroup.main_account 
                   : companyGroup.sub_accounts.find(sub => sub.id === brief.user_id);
                 
+                const isCollapsed = collapsedContentBriefs.has(brief.id);
+                
                 return (
                   <div key={brief.id} className="bg-gray-700/40 rounded-lg border border-gray-600/30">
                     <div className="p-4 border-b border-gray-600/30 bg-gray-700/20">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-white font-semibold">
-                            {brief.title || brief.product_name || `Content Brief - ${new Date(brief.created_at).toLocaleDateString()}`}
-                          </h4>
-                          <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
-                            <span>Brief ID: {brief.id}</span>
-                            <span>•</span>
-                            <span>Created: {new Date(brief.created_at).toLocaleDateString()}</span>
-                            <span>•</span>
-                            <span>
-                              By: {briefCreator ? (briefCreator.profile_name || briefCreator.email) : 'Unknown User'}
-                              {briefCreator?.user_type === 'main' && <Crown className="w-3 h-3 text-yellow-400 inline ml-1" />}
-                            </span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              const newCollapsed = new Set(collapsedContentBriefs);
+                              if (isCollapsed) {
+                                newCollapsed.delete(brief.id);
+                              } else {
+                                newCollapsed.add(brief.id);
+                              }
+                              setCollapsedContentBriefs(newCollapsed);
+                            }}
+                            className="p-1 rounded-lg hover:bg-gray-600/50 transition-colors"
+                            title={isCollapsed ? 'Expand content brief' : 'Collapse content brief'}
+                          >
+                            {isCollapsed ? (
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                            )}
+                          </button>
+                          <div 
+                            className="cursor-pointer flex-1"
+                            onClick={() => {
+                              const newCollapsed = new Set(collapsedContentBriefs);
+                              if (isCollapsed) {
+                                newCollapsed.delete(brief.id);
+                              } else {
+                                newCollapsed.add(brief.id);
+                              }
+                              setCollapsedContentBriefs(newCollapsed);
+                            }}
+                          >
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="text-xl font-bold text-white leading-tight">
+                                {brief.title || brief.product_name || `Content Brief - ${new Date(brief.created_at).toLocaleDateString()}`}
+                              </h4>
+                              <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-full border border-green-500/30">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs font-medium text-green-300">Active Brief</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm">
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-600/30 rounded-lg">
+                                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                <span className="text-gray-300 font-medium">Created</span>
+                                <span className="text-white font-semibold">
+                                  {new Date(brief.created_at).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-600/30 rounded-lg">
+                                <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                                  <span className="text-xs font-bold text-white">
+                                    {briefCreator?.profile_name ? briefCreator.profile_name.charAt(0).toUpperCase() : briefCreator?.email.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <span className="text-gray-300 font-medium">Author</span>
+                                <span className="text-white font-semibold">
+                                  {briefCreator ? (briefCreator.profile_name || briefCreator.email.split('@')[0]) : 'Unknown'}
+                                </span>
+                                {briefCreator?.user_type === 'main' && (
+                                  <Crown className="w-4 h-4 text-yellow-400 ml-1" />
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -1669,8 +1757,10 @@ export function ContentBriefManagement({ onBack }: ContentBriefManagementProps) 
                       </div>
                     </div>
                     
-                                        <div className="p-6">
-                      {(() => {
+                    {/* Content section - only show if not collapsed */}
+                    {!isCollapsed && (
+                      <div className="p-6">
+                        {(() => {
                         // Check if brief_content exists and has valid content
                         let hasValidContent = false;
                         let contentToPass = '';
@@ -1774,7 +1864,8 @@ export function ContentBriefManagement({ onBack }: ContentBriefManagementProps) 
                           );
                         }
                       })()}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

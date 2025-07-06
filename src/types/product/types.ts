@@ -51,6 +51,7 @@ export interface ProductAnalysis {
   }>;
   competitors?: CompetitorsData;
   keywords?: string[]; // New field for admin-managed keywords
+  contentFramework?: string; // New field for framework selection (admin-only)
   isApproved?: boolean;
   approvedBy?: string;
 }
@@ -147,6 +148,7 @@ export const defaultProduct: ProductAnalysis = {
     broader_competitors: []
   },
   keywords: [],
+  contentFramework: undefined, // New field for framework selection
   isApproved: false,
   approvedBy: undefined
 };

@@ -9,6 +9,7 @@ import { SaveStatusIndicator } from './SaveStatusIndicator';
 import { useAutoSave } from '../../hooks/useAutoSave';
 import { CompetitorAnalysis } from './CompetitorAnalysis';
 import { ImageUploader } from '../ui/ImageUploader';
+import { FrameworkSelector } from '../ui/FrameworkSelector';
 import { useAuth } from '../../lib/auth';
 import { deleteCapabilityImage, UploadResult } from '../../lib/storage';
 import { X, Plus, ChevronDown, ChevronUp } from 'lucide-react';
@@ -838,6 +839,8 @@ export function ProductCardContent({
           </div>
         </CollapsibleSection>
 
+
+
         {/* Features and Capabilities - Enhanced Production-Ready Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1299,95 +1302,160 @@ export function ProductCardContent({
 
       {/* Keywords Section - Admin Only */}
       {context === 'admin' && (
-        <CollapsibleSection
-          title="Keywords & Tags"
-          description="Identify and manage keywords for content brief generation"
-          icon={
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-          }
-          gradientColors="bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600"
-          accentColor="bg-yellow-400"
-          defaultExpanded={sectionsExpanded}
-          count={editableProduct.keywords?.length}
-        >
-          <div className="space-y-4">
-            {/* Keywords Display and Management */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  Content Keywords
-                  <span className="text-xs text-gray-500 font-normal">
-                    ({(editableProduct.keywords || []).length} keyword{(editableProduct.keywords || []).length !== 1 ? 's' : ''})
+        <div className="mt-8">
+          <CollapsibleSection
+            title="Keywords & Tags"
+            description="Identify and manage keywords for content brief generation"
+            icon={
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            }
+            gradientColors="bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600"
+            accentColor="bg-yellow-400"
+            defaultExpanded={sectionsExpanded}
+            count={editableProduct.keywords?.length}
+          >
+            <div className="space-y-4">
+              {/* Keywords Display and Management */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Content Keywords
+                    <span className="text-xs text-gray-500 font-normal">
+                      ({(editableProduct.keywords || []).length} keyword{(editableProduct.keywords || []).length !== 1 ? 's' : ''})
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
 
-              <EditableField
-                label=""
-                value={editableProduct.keywords || []}
-                onSave={(value) => updateField('keywords', value)}
-                type="array"
-                arrayItemPlaceholder="Add keyword (e.g., automation, productivity, SaaS, analytics)..."
-                disabled={!enableEditing}
-                className="rounded-lg"
-              />
-            </div>
+                <EditableField
+                  label=""
+                  value={editableProduct.keywords || []}
+                  onSave={(value) => updateField('keywords', value)}
+                  type="array"
+                  arrayItemPlaceholder="Add keyword (e.g., automation, productivity, SaaS, analytics)..."
+                  disabled={!enableEditing}
+                  className="rounded-lg"
+                />
+              </div>
 
-            {/* Keywords Preview */}
-            {editableProduct.keywords && editableProduct.keywords.length > 0 && (
-              <div className="mt-4 p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              {/* Keywords Preview */}
+              {editableProduct.keywords && editableProduct.keywords.length > 0 && (
+                <div className="mt-4 p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                  <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Keyword Tags
+                  </h5>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {editableProduct.keywords.map((keyword, index) => (
+                      <motion.span
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-medium rounded-full shadow-sm hover:shadow-md transition-all duration-200"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        {keyword}
+                      </motion.span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Admin Instructions */}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Keyword Tags
-                </h5>
-                
-                <div className="flex flex-wrap gap-2">
-                  {editableProduct.keywords.map((keyword, index) => (
-                    <motion.span
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-medium rounded-full shadow-sm hover:shadow-md transition-all duration-200"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                      {keyword}
-                    </motion.span>
-                  ))}
+                  <div className="text-xs text-blue-700">
+                    <p className="font-medium mb-1">Admin Keywords:</p>
+                    <p>These keywords will be included when sending data to AirOps for content brief generation. Keywords help improve content relevance and SEO targeting.</p>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Admin Instructions */}
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-start gap-2">
-                <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div className="text-xs text-blue-700">
-                  <p className="font-medium mb-1">Admin Keywords:</p>
-                  <p>These keywords will be included when sending data to AirOps for content brief generation. Keywords help improve content relevance and SEO targeting.</p>
+              {/* Admin Badge */}
+              <div className="flex justify-end">
+                <div className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                  Admin
                 </div>
               </div>
             </div>
+          </CollapsibleSection>
+        </div>
+      )}
 
-            {/* Admin Badge */}
-            <div className="flex justify-end">
-              <div className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
-                Admin
+      {/* Framework Selection - Admin Only */}
+      {context === 'admin' && (
+        <div className="mt-8">
+          <CollapsibleSection
+            title="Content Framework Selection"
+            description="Choose the content framework that best fits your product strategy"
+            icon={
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            }
+            gradientColors="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-600"
+            accentColor="bg-indigo-400"
+            defaultExpanded={sectionsExpanded}
+            count={editableProduct.contentFramework ? 1 : 0}
+          >
+            <div className="space-y-4">
+              {/* Framework Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    Content Framework
+                    <span className="text-xs text-gray-500 font-normal">
+                      ({editableProduct.contentFramework ? 'Selected' : 'Not selected'})
+                    </span>
+                  </span>
+                </label>
+
+                <FrameworkSelector
+                  value={editableProduct.contentFramework}
+                  onSelect={(frameworkId) => updateField('contentFramework', frameworkId)}
+                  disabled={!enableEditing}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Admin Instructions */}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-xs text-blue-700">
+                    <p className="font-medium mb-1">Framework Selection:</p>
+                    <p>Choose the content framework that best aligns with your product's content strategy and marketing goals. This will guide the structure and approach of content briefs generated through AirOps integration.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Admin Badge */}
+              <div className="flex justify-end">
+                <div className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">
+                  Admin
+                </div>
               </div>
             </div>
-          </div>
-        </CollapsibleSection>
+          </CollapsibleSection>
+        </div>
       )}
 
       {/* Advanced sections - only show when expanded and needed */}
