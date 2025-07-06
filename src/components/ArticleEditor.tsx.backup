@@ -16,14 +16,17 @@ import TableHeader from '@tiptap/extension-table-header';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Save, 
+  Download, 
   Upload, 
   Image as ImageIcon, 
   Link as LinkIcon, 
+  Type, 
   List, 
   ListOrdered, 
   Quote, 
   Code, 
   Table as TableIcon, 
+  Palette, 
   AlignLeft, 
   AlignCenter, 
   AlignRight, 
@@ -34,20 +37,35 @@ import {
   Highlighter, 
   Undo, 
   Redo, 
+  ChevronDown, 
   Check, 
   Loader2, 
+  Monitor, 
   Maximize2, 
   Minimize2, 
+  Focus as FocusIcon, 
+  Eye, 
+  MoreVertical,
+  MessageSquare,
+  User,
+  Users,
+  Upload as UploadIcon,
   AlertCircle,
   CheckCircle,
   X,
+  Search,
+  Keyboard,
   History,
   MessageCircle,
   Sparkles,
+  Columns,
+  CheckSquare,
+  Grid3X3,
   Heading1,
   Heading2,
   Heading3,
   Heading4,
+  Settings,
   PaintBucket,
 } from 'lucide-react';
 import { ExportButton } from './ui/ExportButton';
@@ -60,6 +78,7 @@ import { adminArticlesApi } from '../lib/adminApi';
 import { getArticleComments } from '../lib/commentApi';
 import { debounce } from 'lodash';
 import { Decoration, DecorationSet } from 'prosemirror-view';
+import { Node as ProseMirrorNode } from 'prosemirror-model';
 import { supabase } from '../lib/supabase';
 import UserPresence from './ui/UserPresence';
 import CollaborativeCursors from './ui/CollaborativeCursors';
@@ -80,7 +99,7 @@ interface UserProfile {
 
 // Enhanced theme hook for better state management
 const useTheme = () => {
-  const [theme] = useState<'light' | 'dark'>(() => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Initialize from localStorage or system preference
     const saved = localStorage.getItem('article-editor-theme');
     if (saved) return saved as 'light' | 'dark';
@@ -145,6 +164,146 @@ const getTextOffset = (container: HTMLElement, targetNode: Node, targetOffset: n
 };
 
 // Removed simple UserPresence component - using full-featured component from ./ui/UserPresence
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const fetchActiveUsers = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_active_article_users', {
+          p_article_id: articleId
+        });
+
+        if (error) {
+          console.error('Error fetching active users:', error);
+          return;
+        }
+
+        if (mounted) {
+          const users = data?.map((user: any) => ({
+            id: user.user_id,
+            email: user.user_email || 'Unknown',
+            company_name: user.user_company,
+            role: user.user_role,
+            status: user.status
+          })) || [];
+          
+          setActiveUsers(users);
+        }
+      } catch (error) {
+        console.error('Error fetching active users:', error);
+      }
+    };
+
+    initializePresence();
+
+    // Update status to editing when user interacts
+    const handleStatusChange = async (status: 'viewing' | 'editing' | 'idle') => {
+      try {
+        await supabase.rpc('update_user_presence', {
+          p_article_id: articleId,
+          p_status: status
+        });
+      } catch (error) {
+        console.error('Error updating status:', error);
+      }
+    };
+
+    // Debounced status change to prevent rapid updates during comment interactions
+    let statusChangeTimeout: NodeJS.Timeout | null = null;
+    
+    const debouncedStatusChange = (status: 'viewing' | 'editing' | 'idle') => {
+      if (statusChangeTimeout) {
+        clearTimeout(statusChangeTimeout);
+      }
+      statusChangeTimeout = setTimeout(() => {
+        handleStatusChange(status);
+      }, 300); // 300ms debounce to prevent rapid status changes
+    };
+
+    // Listen for editor focus/blur events
+    const handleFocus = () => debouncedStatusChange('editing');
+    const handleBlur = () => debouncedStatusChange('viewing');
+
+    const editorElement = document.querySelector('.ProseMirror');
+    if (editorElement) {
+      editorElement.addEventListener('focus', handleFocus);
+      editorElement.addEventListener('blur', handleBlur);
+    }
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+      
+      if (presenceChannel) {
+        supabase.removeChannel(presenceChannel);
+      }
+
+      if (editorElement) {
+        editorElement.removeEventListener('focus', handleFocus);
+        editorElement.removeEventListener('blur', handleBlur);
+      }
+
+      // Leave article when component unmounts
+      supabase.rpc('leave_article', { p_article_id: articleId });
+    };
+  }, [articleId]);
+
+  const getInitials = (email: string) => {
+    if (!email) return '?';
+    const parts = email.split('@')[0].split('.');
+    if (parts.length >= 2) {
+      return parts[0][0].toUpperCase() + parts[1][0].toUpperCase();
+    }
+    return email[0].toUpperCase();
+  };
+
+  const getStatusColor = (status?: string, role?: string) => {
+    if (role === 'admin') return 'from-red-400 to-red-600';
+    if (role === 'manager') return 'from-blue-400 to-blue-600';
+    if (status === 'editing') return 'from-green-400 to-green-600';
+    return 'from-blue-400 to-purple-500';
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-1">
+        <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-1">
+      {activeUsers.slice(0, 5).map((user) => (
+        <div key={user.id} className="relative group">
+          <div 
+            className={`w-8 h-8 bg-gradient-to-br ${getStatusColor(user.status, user.role)} rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white dark:border-gray-800 shadow-sm transition-transform hover:scale-110`}
+            title={`${user.email}${user.company_name ? ` (${user.company_name})` : ''} - ${user.status || 'viewing'}${user.role ? ` [${user.role}]` : ''}`}
+          >
+            {getInitials(user.email)}
+          </div>
+          {user.status === 'editing' && (
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border border-white dark:border-gray-800"></div>
+          )}
+        </div>
+      ))}
+      
+      {activeUsers.length > 5 && (
+        <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white dark:border-gray-800 shadow-sm">
+          +{activeUsers.length - 5}
+        </div>
+      )}
+      
+      {activeUsers.length === 0 && (
+        <div className="text-sm text-gray-500">No active collaborators</div>
+      )}
+    </div>
+  );
+};
 
 // Enhanced Undo/Redo History Panel with better design
 const UndoRedoHistoryPanel = ({ editor }: { editor: any }) => {
@@ -793,9 +952,6 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
   const [textSelection, setTextSelection] = useState<{ start: number; end: number; text: string; range?: Range } | null>(null);
   const [linkData, setLinkData] = useState<any>(null);
   
-  // Real-time Collaboration State
-  const [isCollaborationReady, setIsCollaborationReady] = useState(false);
-  
   // Word count and stats
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
@@ -888,91 +1044,6 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, [editorRef]);
-
-  // Initialize real-time collaboration when articleId is available
-  useEffect(() => {
-    if (!articleId) return;
-
-    const initializeCollaboration = async () => {
-      try {
-        // Get current user info for metadata
-        const { data: { user } } = await supabase.auth.getUser();
-        const userMetadata = {
-          name: adminUser?.email?.split('@')[0] || user?.email?.split('@')[0],
-          email: adminUser?.email || user?.email,
-          avatar_url: user?.user_metadata?.avatar_url
-        };
-        
-        // Join the article for real-time collaboration
-        await realtimeCollaboration.joinArticle(articleId, userMetadata);
-        setIsCollaborationReady(true);
-        console.log('✅ Joined real-time collaboration for article:', articleId);
-      } catch (error) {
-        console.error('Failed to initialize collaboration:', error);
-      }
-    };
-
-    initializeCollaboration();
-
-    // Cleanup on unmount
-    return () => {
-      realtimeCollaboration.leaveArticle();
-      setIsCollaborationReady(false);
-      console.log('👋 Left real-time collaboration');
-    };
-  }, [articleId, adminUser]);
-
-  // Update cursor position when editor selection changes
-  useEffect(() => {
-    if (!editor || !isCollaborationReady) return;
-
-    const updateCursorPosition = () => {
-      const selection = editor.state.selection;
-      const from = selection.from;
-      const to = selection.to;
-      
-      // Get the DOM position for the cursor
-      const coords = editor.view.coordsAtPos(from);
-      const editorRect = editorRef.current?.getBoundingClientRect();
-      
-      if (editorRect) {
-        const cursorPosition = {
-          from,
-          to,
-          x: coords.left - editorRect.left,
-          y: coords.top - editorRect.top,
-          selection: from !== to ? { anchor: from, head: to } : undefined
-        };
-        
-        realtimeCollaboration.updateCursorPosition(cursorPosition);
-      }
-    };
-
-    // Listen to selection updates
-    const handleSelectionUpdate = () => {
-      updateCursorPosition();
-      // Update status to editing when user is actively selecting/typing
-      if (articleId) {
-        realtimeCollaboration.updatePresence(articleId, 'editing');
-      }
-    };
-
-    const handleTransaction = () => {
-      // Update status to editing on any transaction (typing, formatting, etc.)
-      if (articleId) {
-        realtimeCollaboration.updatePresence(articleId, 'editing');
-      }
-    };
-
-    // Add event listeners
-    editor.on('selectionUpdate', handleSelectionUpdate);
-    editor.on('transaction', handleTransaction);
-
-    return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
-      editor.off('transaction', handleTransaction);
-    };
-  }, [editor, isCollaborationReady, articleId]);
 
   // Load article content when articleId is provided
   useEffect(() => {
@@ -1942,7 +2013,7 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
               ref={editorRef}
               data-editor="true"
               className={`
-                px-8 pt-8 min-h-full relative
+                px-8 pt-8 min-h-full
                 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}
                 ${focusMode === 'zen' ? 'prose-2xl max-w-5xl mx-auto' : 'prose-xl max-w-none'}
                 ${isMobile ? 'prose-lg' : ''}
@@ -1961,18 +2032,6 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
                 })
               }}
             >
-              {/* Collaborative Cursors Overlay */}
-              {isCollaborationReady && articleId && (
-                <CollaborativeCursors
-                  articleId={articleId}
-                  editorRef={editorRef}
-                  className="absolute inset-0 pointer-events-none z-10"
-                  showNotifications={true}
-                  enableFollowMode={true}
-                  enableSmoothCursors={true}
-                />
-              )}
-              
               <EditorContent 
                 editor={editor} 
                 className={`

@@ -23,6 +23,9 @@ import { motion } from 'framer-motion';
 import { Edit3, ArrowLeft, Package, FileText, AlertCircle } from 'lucide-react';
 import { useBriefAutoSave } from '../hooks/useBriefAutoSave';
 import { supabase } from '../lib/supabase';
+import UserPresence from '../components/ui/UserPresence';
+import CollaborativeCursors from '../components/ui/CollaborativeCursors';
+import { realtimeCollaboration } from '../lib/realtimeCollaboration';
 
 export default function EditContentBrief() {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +34,7 @@ export default function EditContentBrief() {
   const [loading, setLoading] = useState(true);
   const [useJsonEditor, setUseJsonEditor] = useState(false);
   const [jsonContent, setJsonContent] = useState('');
+  const [isCollaborationReady, setIsCollaborationReady] = useState(false);
 
   // Use the extracted auto-save hook
   const { saving, saveToSupabase, handleAutoSave } = useBriefAutoSave(id, brief);
@@ -112,6 +116,34 @@ export default function EditContentBrief() {
   useEffect(() => {
     fetchSuggestions();
   }, [fetchSuggestions]);
+
+  // Initialize real-time collaboration
+  useEffect(() => {
+    if (!id) return;
+
+    const initializeCollaboration = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const userMetadata = {
+          name: user?.email?.split('@')[0],
+          email: user?.email,
+          avatar_url: user?.user_metadata?.avatar_url
+        };
+        
+        await realtimeCollaboration.joinArticle(id, userMetadata);
+        setIsCollaborationReady(true);
+      } catch (error) {
+        console.error('Failed to initialize collaboration:', error);
+      }
+    };
+
+    initializeCollaboration();
+
+    return () => {
+      realtimeCollaboration.leaveArticle();
+      setIsCollaborationReady(false);
+    };
+  }, [id]);
 
   // Parse links and titles from various formats
   const parseLinksAndTitles = (data: any) => {
@@ -337,6 +369,11 @@ export default function EditContentBrief() {
             </div>
             
             <div className="flex items-center space-x-3">
+              {/* User Presence */}
+              {id && (
+                <UserPresence articleId={id} />
+              )}
+              
               {/* Status Indicator */}
               <div className="flex items-center space-x-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-200">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
