@@ -141,16 +141,16 @@ export function FrameworkSelector({ value, onSelect, disabled = false, className
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="absolute z-[99999] w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden"
+              className="absolute z-[999999] w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden"
               style={{ 
-                zIndex: 99999,
+                zIndex: 999999,
                 position: 'absolute',
                 top: '100%',
                 left: 0,
                 right: 0
               }}
             >
-              <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+              <div className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-500">
                 {frameworks.map((framework, index) => (
                   <motion.button
                     key={framework.id}
@@ -198,9 +198,9 @@ export function FrameworkSelector({ value, onSelect, disabled = false, className
       {/* Overlay to close dropdown - positioned outside main container */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-[99998]" 
+          className="fixed inset-0 z-[999998]" 
           onClick={() => setIsOpen(false)}
-          style={{ zIndex: 99998 }}
+          style={{ zIndex: 999998 }}
         />
       )}
     </>

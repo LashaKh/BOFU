@@ -80,6 +80,9 @@ import { debounce } from 'lodash';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { Node as ProseMirrorNode } from 'prosemirror-model';
 import { supabase } from '../lib/supabase';
+import UserPresence from './ui/UserPresence';
+import CollaborativeCursors from './ui/CollaborativeCursors';
+import { realtimeCollaboration } from '../lib/realtimeCollaboration';
 
 // Import enhanced CSS styles
 import '../styles/article-editor-enhanced.css';
@@ -160,53 +163,7 @@ const getTextOffset = (container: HTMLElement, targetNode: Node, targetOffset: n
   return currentOffset;
 };
 
-// Enhanced User Presence Component with Real-time Collaboration
-const UserPresence = ({ articleId }: { articleId: string }) => {
-  const [activeUsers, setActiveUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    let presenceChannel: any = null;
-
-    const initializePresence = async () => {
-      try {
-        // Get current user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) {
-          console.log('No authenticated user for presence tracking');
-          setLoading(false);
-          return;
-        }
-
-        // Update user presence to mark as viewing
-        const { error: presenceError } = await supabase.rpc('update_user_presence', {
-          p_article_id: articleId,
-          p_status: 'viewing'
-        });
-
-        if (presenceError) {
-          console.error('Error updating presence:', presenceError);
-        }
-
-        // Fetch initial active users
-        await fetchActiveUsers();
-
-        // Set up real-time channel for presence updates
-        presenceChannel = supabase.channel(`article_presence_${articleId}`)
-          .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'article_presence',
-            filter: `article_id=eq.${articleId}`
-          }, () => {
-            // Refetch active users when presence changes
-            fetchActiveUsers();
-          })
-          .subscribe();
-
-      } catch (error) {
-        console.error('Error initializing presence:', error);
+// Removed simple UserPresence component - using full-featured component from ./ui/UserPresence
       } finally {
         if (mounted) {
           setLoading(false);
