@@ -153,19 +153,30 @@ export async function saveApprovedProduct(
       enrichedProduct = enrichedProducts[0] || product;
     }
 
+    // Extract framework from product data for separate column
+    const framework = enrichedProduct.framework || null;
+    console.log('[research] Saving framework to separate column:', framework);
+    
     // Insert the approved product into the approved_products table
+    const insertData: any = {
+      research_result_id: researchResultId,
+      product_index: productIndex,
+      product_name: enrichedProduct.productDetails?.name || 'Unnamed Product',
+      product_description: enrichedProduct.productDetails?.description || '',
+      company_name: enrichedProduct.companyName || '',
+      approved_by: approvedBy,
+      product_data: enrichedProduct,
+      reviewed_status: 'pending'
+    };
+    
+    // Add framework to separate column if present
+    if (framework) {
+      insertData.framework = framework;
+    }
+    
     const { data, error } = await supabase
       .from('approved_products')
-      .insert({
-        research_result_id: researchResultId,
-        product_index: productIndex,
-        product_name: enrichedProduct.productDetails?.name || 'Unnamed Product',
-        product_description: enrichedProduct.productDetails?.description || '',
-        company_name: enrichedProduct.companyName || '',
-        approved_by: approvedBy,
-        product_data: enrichedProduct,
-        reviewed_status: 'pending'
-      })
+      .insert(insertData)
       .select('id')
       .single();
 
@@ -268,12 +279,24 @@ export async function updateApprovedProduct(
       })));
     }
     
+    // Extract framework from product data to save in separate column
+    const framework = updatedProductData.framework || null;
+    console.log('[research] Extracted framework for separate column:', framework);
+    
+    const updateData: any = {
+      product_data: updatedProductData,
+      updated_at: new Date().toISOString()
+    };
+    
+    // If framework is provided, update the separate framework column
+    if (framework) {
+      updateData.framework = framework;
+      console.log('[research] Updating framework column with:', framework);
+    }
+    
     const { error } = await supabase
       .from('approved_products')
-      .update({
-        product_data: updatedProductData,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id);
 
     if (error) {
@@ -281,7 +304,7 @@ export async function updateApprovedProduct(
       throw error;
     }
     
-    console.log('[research] Successfully updated approved product:', id);
+    console.log('[research] Successfully updated approved product:', id, 'with framework:', framework);
   } catch (error) {
     console.error('[research] Error updating approved product:', error);
     throw error;
