@@ -264,6 +264,7 @@ export function ProductCard(props: any) {
   // Add debugging to see what ProductCard receives
   console.log("[ProductCard] Received product:", props.product);
   console.log("[ProductCard] Received product.competitors:", props.product.competitors);
+  console.log("[ProductCard] Received product.framework:", props.product.framework);
 
   // Transform the product to ensure it has the right structure
   const enhancedProduct = React.useMemo(() => {
@@ -318,6 +319,7 @@ export function ProductCard(props: any) {
       capabilities: product.capabilities || [],
       competitors: product.competitors || undefined,
       keywords: product.keywords || [],  // Keywords corruption is now handled in ContentBriefManagement
+      framework: product.framework,  // Preserve framework selection through transformation
       isApproved: product.isApproved || false,
       google_doc: product.google_doc,
       competitorAnalysisUrl: product.competitorAnalysisUrl,
@@ -325,6 +327,7 @@ export function ProductCard(props: any) {
     
     console.log("[ProductCard] Transformed product:", transformed);
     console.log("[ProductCard] Transformed competitors:", transformed.competitors);
+    console.log("[ProductCard] Transformed framework:", transformed.framework);
     
     return transformed;
   }, [props.product]);
