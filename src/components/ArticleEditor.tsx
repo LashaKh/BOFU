@@ -16,14 +16,17 @@ import TableHeader from '@tiptap/extension-table-header';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Save, 
+  Download, 
   Upload, 
   Image as ImageIcon, 
   Link as LinkIcon, 
+  Type, 
   List, 
   ListOrdered, 
   Quote, 
   Code, 
   Table as TableIcon, 
+  Palette, 
   AlignLeft, 
   AlignCenter, 
   AlignRight, 
@@ -34,20 +37,35 @@ import {
   Highlighter, 
   Undo, 
   Redo, 
+  ChevronDown, 
   Check, 
   Loader2, 
+  Monitor, 
   Maximize2, 
   Minimize2, 
+  Focus as FocusIcon, 
+  Eye, 
+  MoreVertical,
+  MessageSquare,
+  User,
+  Users,
+  Upload as UploadIcon,
   AlertCircle,
   CheckCircle,
   X,
+  Search,
+  Keyboard,
   History,
   MessageCircle,
   Sparkles,
+  Columns,
+  CheckSquare,
+  Grid3X3,
   Heading1,
   Heading2,
   Heading3,
   Heading4,
+  Settings,
   PaintBucket,
 } from 'lucide-react';
 import { ExportButton } from './ui/ExportButton';
@@ -60,6 +78,7 @@ import { adminArticlesApi } from '../lib/adminApi';
 import { getArticleComments } from '../lib/commentApi';
 import { debounce } from 'lodash';
 import { Decoration, DecorationSet } from 'prosemirror-view';
+import { Node as ProseMirrorNode } from 'prosemirror-model';
 import { supabase } from '../lib/supabase';
 import UserPresence from './ui/UserPresence';
 import CollaborativeCursors from './ui/CollaborativeCursors';
@@ -80,7 +99,7 @@ interface UserProfile {
 
 // Enhanced theme hook for better state management
 const useTheme = () => {
-  const [theme] = useState<'light' | 'dark'>(() => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Initialize from localStorage or system preference
     const saved = localStorage.getItem('article-editor-theme');
     if (saved) return saved as 'light' | 'dark';
@@ -922,7 +941,53 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
     };
   }, [articleId, adminUser]);
 
-  // Note: Cursor position update effect moved after editor definition
+  // Update cursor position when editor selection changes
+  useEffect(() => {
+    if (!editor || !isCollaborationReady) return;
+
+    const updateCursorPosition = () => {
+      const selection = editor.state.selection;
+      const from = selection.from;
+      const to = selection.to;
+      
+      // Get the DOM position for the cursor
+      const coords = editor.view.coordsAtPos(from);
+      const editorRect = editorRef.current?.getBoundingClientRect();
+      
+      if (editorRect) {
+        const cursorPosition = {
+          from,
+          to,
+          x: coords.left - editorRect.left,
+          y: coords.top - editorRect.top,
+          selection: from !== to ? { anchor: from, head: to } : undefined
+        };
+        
+        realtimeCollaboration.updateCursorPosition(cursorPosition);
+      }
+    };
+
+    // Listen to selection updates
+    const handleSelectionUpdate = () => {
+      updateCursorPosition();
+      // Update status to editing when user is actively selecting/typing
+      realtimeCollaboration.updatePresence(articleId, 'editing');
+    };
+
+    const handleTransaction = () => {
+      // Update status to editing on any transaction (typing, formatting, etc.)
+      realtimeCollaboration.updatePresence(articleId, 'editing');
+    };
+
+    // Add event listeners
+    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor.on('transaction', handleTransaction);
+
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+      editor.off('transaction', handleTransaction);
+    };
+  }, [editor, isCollaborationReady, articleId]);
 
   // Load article content when articleId is provided
   useEffect(() => {
@@ -1142,60 +1207,6 @@ export const ArticleEditor: React.FC<ArticleEditorProps> = ({
       editor.view.updateState(editor.view.state);
     }
   }, [highlightedCommentId, editor]);
-
-  // Update cursor position when editor selection changes
-  useEffect(() => {
-    if (!editor || !isCollaborationReady) return;
-
-    const updateCursorPosition = () => {
-      const selection = editor.state.selection;
-      const from = selection.from;
-      const to = selection.to;
-      
-      // Get the DOM position for the cursor
-      const coords = editor.view.coordsAtPos(from);
-      const editorRect = editorRef.current?.getBoundingClientRect();
-      
-      if (editorRect) {
-        const cursorPosition = {
-          from,
-          to,
-          x: coords.left - editorRect.left,
-          y: coords.top - editorRect.top,
-          selection: from !== to ? { anchor: from, head: to } : undefined
-        };
-        
-        realtimeCollaboration.updateCursorPosition(cursorPosition);
-      }
-    };
-
-    // Listen to selection updates
-    const handleSelectionUpdate = () => {
-      updateCursorPosition();
-      // Update status to editing when user is actively selecting/typing
-      if (articleId) {
-        realtimeCollaboration.updatePresence(articleId, 'editing');
-      }
-    };
-
-    const handleTransaction = () => {
-      // Update status to editing on any transaction (typing, formatting, etc.)
-      if (articleId) {
-        realtimeCollaboration.updatePresence(articleId, 'editing');
-      }
-    };
-
-    // Add event listeners
-    editor.on('selectionUpdate', handleSelectionUpdate);
-    editor.on('transaction', handleTransaction);
-
-    return () => {
-      if (editor && !editor.isDestroyed) {
-        editor.off('selectionUpdate', handleSelectionUpdate);
-        editor.off('transaction', handleTransaction);
-      }
-    };
-  }, [editor, isCollaborationReady, articleId]);
 
   // Auto-save functionality with stable debounced function
   const debouncedAutoSave = useMemo(
