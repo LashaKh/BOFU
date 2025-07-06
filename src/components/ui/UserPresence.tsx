@@ -74,9 +74,11 @@ export const UserPresence: React.FC<UserPresenceProps> = ({
 
     const initializePresence = async () => {
       try {
+        console.log('🚀 UserPresence: Initializing for article:', articleId);
         // Join the article for real-time collaboration
         await realtimeCollaboration.joinArticle(articleId);
         setIsJoined(true);
+        console.log('✅ UserPresence: Successfully joined article');
 
         // Subscribe to presence changes
         presenceUnsubscribe = realtimeCollaboration.onPresenceChange((presence) => {
@@ -114,6 +116,7 @@ export const UserPresence: React.FC<UserPresenceProps> = ({
 
         // Get initial active users
         const initialUsers = await realtimeCollaboration.getActiveUsers(articleId);
+        console.log('👥 UserPresence: Initial active users:', initialUsers);
         setActiveUsers(initialUsers);
       } catch (error) {
         console.error('Failed to initialize presence:', error);
@@ -393,41 +396,45 @@ export const UserPresence: React.FC<UserPresenceProps> = ({
 
   const renderCompactView = () => (
     <div className="flex items-center space-x-2">
-      {/* Avatar Stack */}
-      <div className="flex -space-x-2">
-        {otherUsers.slice(0, 3).map((user) => 
-          renderUserAvatar(user, 'sm')
-        )}
+      {/* Always show collaboration indicator */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center space-x-2 px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full hover:from-blue-500/20 hover:to-purple-500/20 transition-all"
+        title={`${totalUsers} user${totalUsers !== 1 ? 's' : ''} active`}
+      >
+        <div className="flex items-center space-x-1">
+          <Users className="w-4 h-4 text-blue-500" />
+          <span className="font-medium text-gray-700 dark:text-gray-300">{totalUsers}</span>
+        </div>
         
-        {otherUsers.length > 3 && (
-          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium border-2 border-white">
-            +{otherUsers.length - 3}
+        {/* Avatar Stack */}
+        {otherUsers.length > 0 && (
+          <div className="flex -space-x-2 ml-2">
+            {otherUsers.slice(0, 3).map((user) => 
+              renderUserAvatar(user, 'sm')
+            )}
+            
+            {otherUsers.length > 3 && (
+              <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium border-2 border-white dark:border-gray-800">
+                +{otherUsers.length - 3}
+              </div>
+            )}
           </div>
         )}
-      </div>
-
-      {/* User Count and Controls */}
-      {totalUsers > 1 && (
+        
         <div className="flex items-center space-x-1">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center space-x-1 px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-            title={`${totalUsers} users active`}
-          >
-            <Users className="w-4 h-4" />
-            <span>{totalUsers}</span>
-            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
-          
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-            title="Presence settings"
-          >
-            <Settings className="w-3 h-3" />
-          </button>
+          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </div>
-      )}
+      </button>
+      
+      {/* Settings button */}
+      <button
+        onClick={() => setShowSettings(!showSettings)}
+        className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        title="Collaboration settings"
+      >
+        <Settings className="w-3.5 h-3.5" />
+      </button>
     </div>
   );
 

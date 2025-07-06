@@ -467,13 +467,34 @@ export function ProductCardContent({
         (currentCompetitors.broader_competitors?.length || 0) : 0,
     });
     
-    setEditableProduct(product);
+    // Preserve local changes (like framework selection) that may not be reflected in the prop yet
+    setEditableProduct(prev => {
+      const mergedProduct = { ...product };
+      
+      // If we have a local framework selection and the incoming prop doesn't have one,
+      // preserve the local selection to prevent it from being reset
+      if (prev.framework && !product.framework) {
+        console.log("🔄 ProductCardContent: Preserving local framework selection:", prev.framework);
+        mergedProduct.framework = prev.framework;
+      }
+      
+      // You can add other fields here that should be preserved during prop updates
+      
+      return mergedProduct;
+    });
   }, [product]);
 
-  // Debug logging for competitor data flow
+  // Debug logging for competitor data flow and framework tracking
   useEffect(() => {
     console.log("[ProductCardContent] editableProduct updated:", editableProduct);
     console.log("[ProductCardContent] editableProduct.competitors:", editableProduct.competitors);
+    
+    // Special tracking for framework field
+    if (editableProduct.framework) {
+      console.log("🎯 [ProductCardContent] Framework is set:", editableProduct.framework);
+    } else {
+      console.log("🚫 [ProductCardContent] Framework is not set or undefined");
+    }
   }, [editableProduct]);
 
   // Auto-save functionality
@@ -574,6 +595,16 @@ export function ProductCardContent({
         [field]: value
       };
       console.log('🔄 ProductCardContent: editableProduct updated:', { field, newValue: value });
+      
+      // Special logging for framework field
+      if (field === 'framework') {
+        console.log('🎯 ProductCardContent: Framework field specifically updated:', {
+          previousFramework: prev.framework,
+          newFramework: value,
+          fullUpdatedProduct: updated
+        });
+      }
+      
       return updated;
     });
   }, []);

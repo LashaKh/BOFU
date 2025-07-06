@@ -31,6 +31,7 @@ import { toast } from 'react-hot-toast';
 import ArticleAICoPilot from '../components/admin/ArticleAICoPilot';
 import { useAdminCheck } from '../hooks/useAdminCheck';
 import { GoogleDocLink } from '../components/ui/GoogleDocLink';
+import { supabase } from '../lib/supabase';
 
 interface AdminArticleEditorPageProps {}
 
@@ -63,6 +64,7 @@ export const AdminArticleEditorPage: React.FC<AdminArticleEditorPageProps> = () 
     const { articleId } = useParams<{ articleId: string }>();
     const navigate = useNavigate();
     const { isAdmin, loading: adminLoading } = useAdminCheck();
+    const [adminUser, setAdminUser] = useState<any>(null);
     
     console.log('🔥 [AdminArticleEditorPage] Article ID from params:', articleId);
     console.log('🔥 [AdminArticleEditorPage] supabaseAdmin available:', !!supabaseAdmin);
@@ -99,6 +101,35 @@ export const AdminArticleEditorPage: React.FC<AdminArticleEditorPageProps> = () 
     // AI Co-Pilot states
     const [showAICoPilot, setShowAICoPilot] = useState(false);
     const [currentArticleContent, setCurrentArticleContent] = useState('');
+
+    // Get admin user info
+    useEffect(() => {
+      const getAdminUser = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // Get admin profile
+            const { data: adminProfile } = await supabase
+              .from('admin_profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+            
+            if (adminProfile) {
+              setAdminUser({
+                id: user.id,
+                email: user.email,
+                ...adminProfile
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error getting admin user:', error);
+        }
+      };
+      
+      getAdminUser();
+    }, []);
 
     // Update time display every minute to prevent constant re-renders
     useEffect(() => {
@@ -658,6 +689,7 @@ export const AdminArticleEditorPage: React.FC<AdminArticleEditorPageProps> = () 
             onAutoSave={handleAutoSave}
             className="h-full"
             adminMode={true}
+            adminUser={adminUser}
             originalAuthor={originalAuthor}
             onStatusChange={handleStatusChange}
             onOwnershipTransfer={(newOwnerId: string) => console.log('Ownership transfer:', newOwnerId)}

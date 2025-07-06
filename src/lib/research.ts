@@ -211,6 +211,8 @@ export async function getApprovedProducts(): Promise<any[]> {
           ...item.product_data,
           research_result_id: item.research_result_id,
           product_id: item.product_id,
+          // Include framework from approved_products table
+          framework: item.framework,
           // Add user information to the product data
           userEmail: userProfile?.email,
           userCompanyName: userProfile?.company_name,
@@ -236,7 +238,9 @@ export async function getApprovedProducts(): Promise<any[]> {
         product_data: {
           ...item.product_data,
           research_result_id: item.research_result_id,
-          product_id: item.product_id
+          product_id: item.product_id,
+          // Include framework from approved_products table
+          framework: item.framework
         }
       }));
     } catch (fallbackError) {

@@ -156,6 +156,39 @@ export class RealtimeCollaborationService {
       });
 
       if (error) {
+        // Check if it's a constraint error - this might happen if migrations haven't been run
+        if (error.code === '42P10') {
+          console.warn('⚠️ Presence constraint issue detected. Attempting workaround...');
+          
+          // Try direct upsert as a fallback
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // First, try to delete any existing record
+            await supabase
+              .from('user_presence')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('article_id', articleId);
+            
+            // Then insert a new one
+            const { error: insertError } = await supabase
+              .from('user_presence')
+              .insert({
+                user_id: user.id,
+                article_id: articleId,
+                status,
+                cursor_position: cursorPosition || null,
+                user_metadata: userMetadata || {},
+                last_heartbeat: new Date().toISOString(),
+                joined_at: new Date().toISOString()
+              });
+            
+            if (!insertError) {
+              console.log('✅ Presence updated using workaround');
+              return;
+            }
+          }
+        }
         throw error;
       }
     } catch (error) {
@@ -193,6 +226,31 @@ export class RealtimeCollaborationService {
       });
 
       if (error) {
+        // If RPC doesn't exist, try direct query
+        if (error.code === '42883' || error.message?.includes('function') || error.message?.includes('does not exist')) {
+          console.warn('⚠️ get_active_users RPC not found, using direct query');
+          
+          const { data: presenceData, error: queryError } = await supabase
+            .from('user_presence')
+            .select('*')
+            .eq('article_id', articleId)
+            .gte('last_heartbeat', new Date(Date.now() - 5 * 60 * 1000).toISOString());
+          
+          if (queryError) {
+            console.error('Direct query also failed:', queryError);
+            return [];
+          }
+          
+          // Transform to PresenceUser format
+          return (presenceData || []).map(p => ({
+            user_id: p.user_id,
+            status: p.status,
+            cursor_position: p.cursor_position,
+            user_metadata: p.user_metadata || {},
+            last_heartbeat: p.last_heartbeat,
+            joined_at: p.joined_at
+          }));
+        }
         throw error;
       }
 
