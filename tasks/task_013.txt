@@ -1,0 +1,55 @@
+# Task ID: 13
+# Title: Implement Inline Commenting Interface
+# Status: done
+# Dependencies: 2, 7
+# Priority: medium
+# Description: Create UI for adding and viewing inline comments on article text
+# Details:
+Implement a comprehensive inline commenting system with several key components: 1) Create a comment marker component that appears in the editor margin with color-coding based on status, hover previews, and exact text range indicators. 2) Implement smart text selection handling for comment targeting, supporting multi-paragraph selections with precise character positioning. 3) Build comment creation modal/popover with TipTap rich text input, real-time validation, and comment type selection. 4) Create comment thread component for nested replies with unlimited depth, user attribution, and edit/delete capabilities. 5) Implement comment status controls (active, resolve, reopen, archive) with visual indicators and bulk operations. 6) Integrate with existing ArticleEditor component, article_comments table, and Supabase for real-time updates. 7) Add advanced UI features including responsive design, smooth animations, keyboard navigation, and context menus.
+
+# Test Strategy:
+Test comment creation on various text selections including multi-paragraph content. Verify comment marker positioning and color-coding based on status. Test hover previews and click interactions. Validate the TipTap editor integration in the comment interface. Test comment thread UI with deeply nested replies. Verify status changes, bulk operations, and real-time updates via Supabase. Test user attribution display and edit/delete permissions. Verify responsive design on different screen sizes. Ensure keyboard navigation and accessibility compliance. Test integration points with the main ArticleEditor component.
+
+# Subtasks:
+## 13.1. Implement Comment Marker System [done]
+### Dependencies: None
+### Description: Create visual comment indicators in the editor margin with hover effects, color-coding based on status, and click interaction to open comment threads
+### Details:
+
+
+## 13.2. Build Text Selection Handler [done]
+### Dependencies: None
+### Description: Implement smart text selection detection with precise character positioning, visual highlighting, multi-paragraph support, and selection validation
+### Details:
+
+
+## 13.3. Create Comment Creation Interface [done]
+### Dependencies: None
+### Description: Develop popover/modal triggered by text selection with TipTap rich text editor, real-time validation, and comment type selection
+### Details:
+
+
+## 13.4. Implement Comment Thread Component [done]
+### Dependencies: None
+### Description: Build nested reply system with unlimited depth, user attribution, edit/delete capabilities, and reply composition interface
+### Details:
+
+
+## 13.5. Develop Comment Status Management [done]
+### Dependencies: None
+### Description: Create controls for Active/Resolved/Archived statuses with visual indicators, bulk operations, and status change notifications
+### Details:
+
+
+## 13.6. Integration with Existing Components [done]
+### Dependencies: None
+### Description: Ensure seamless integration with ArticleEditor component, article_comments database table, and Supabase real-time subscriptions
+### Details:
+
+
+## 13.7. Add Advanced UI Features [done]
+### Dependencies: None
+### Description: Implement responsive design, smooth animations/transitions, keyboard navigation, and context menus for advanced actions
+### Details:
+
+

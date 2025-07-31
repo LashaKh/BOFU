@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+
+console.log('🔥 UNIFIED EDITOR MODULE: File imported/loaded');
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArticleEditor } from './ArticleEditor';
 import { toast } from 'react-hot-toast';
@@ -21,7 +23,12 @@ interface UnifiedArticleEditorProps {
 }
 
 export const UnifiedArticleEditor: React.FC<UnifiedArticleEditorProps> = ({ forceMode }) => {
-  const params = useParams<{ id?: string; articleId?: string }>();
+  console.log('🎯 UNIFIED EDITOR: UnifiedArticleEditor function called - START');
+  
+  try {
+    console.log('🎯 UNIFIED EDITOR: About to get params');
+    const params = useParams<{ id?: string; articleId?: string }>();
+    console.log('🎯 UNIFIED EDITOR: Got params:', params);
   const articleId = params.id || params.articleId;
   const navigate = useNavigate();
   const { layout, setAICopilotVisible } = useLayout();
@@ -486,6 +493,11 @@ export const UnifiedArticleEditor: React.FC<UnifiedArticleEditorProps> = ({ forc
 
   return (
     <div className="min-h-screen bg-gray-900 flex">
+      {/* DEBUG: Visual confirmation banner */}
+      <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 z-50 font-bold">
+        🚨 UNIFIED EDITOR LOADED - Changes Applied! 🚨
+      </div>
+      
       {/* Main content area */}
       <div 
         className="flex-1 flex flex-col transition-all duration-300"
@@ -659,6 +671,13 @@ export const UnifiedArticleEditor: React.FC<UnifiedArticleEditorProps> = ({ forc
       )}
     </div>
   );
+  } catch (error) {
+    console.error('🚨 UNIFIED EDITOR ERROR:', error);
+    return <div className="min-h-screen bg-red-900 text-white p-8">
+      <h1>UnifiedArticleEditor Error</h1>
+      <pre>{String(error)}</pre>
+    </div>;
+  }
 };
 
 export default UnifiedArticleEditor; 

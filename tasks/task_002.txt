@@ -1,0 +1,11 @@
+# Task ID: 2
+# Title: Create Comment System Database Schema
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: Implement database tables for the article commenting system
+# Details:
+Create a new 'article_comments' table with fields: id (UUID), article_id (references content_briefs), user_id (UUID), parent_comment_id (UUID, nullable), content (TEXT), content_type (ENUM: 'text', 'image', 'suggestion'), selection_start (INTEGER, nullable), selection_end (INTEGER, nullable), status (ENUM: 'active', 'resolved', 'archived'), created_at (TIMESTAMP), updated_at (TIMESTAMP). Add appropriate indexes for performance.
+
+# Test Strategy:
+Verify table creation in Supabase. Test CRUD operations with sample comment data. Validate foreign key constraints and relationships. Test comment threading with parent_comment_id references.

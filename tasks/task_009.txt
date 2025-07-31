@@ -1,0 +1,584 @@
+# Task ID: 9
+# Title: Implement Advanced Editor Features
+# Status: done
+# Dependencies: 7
+# Priority: medium
+# Description: Add tables, nested lists, and advanced formatting options
+# Details:
+Add table extension to TipTap with cell merging and table controls. Implement nested list functionality with proper indentation. Add link insertion and management with preview and editing options. Create text spacing and indentation controls. Implement find and replace functionality. Add special characters insertion menu. Ensure all advanced features have proper UI controls in the toolbar.
+
+# Test Strategy:
+Test table creation, editing, and formatting. Verify nested list behavior with multiple levels. Test link insertion, editing, and preview. Validate spacing and indentation controls. Test find/replace with various search patterns. Verify special character insertion.
+
+# Subtasks:
+## 1. Implement Table Extension with Basic Structure [done]
+### Dependencies: None
+### Description: Add the TipTap table extension to enable basic table creation and editing functionality. This will establish the foundation for more advanced table features.
+### Details:
+1. Install required TipTap table extensions: '@tiptap/extension-table', '@tiptap/extension-table-row', '@tiptap/extension-table-cell', and '@tiptap/extension-table-header'.
+2. Register these extensions with the TipTap editor instance.
+3. Create UI controls for table insertion with row/column selection grid.
+4. Implement basic table creation functionality with configurable rows and columns.
+5. Add table detection and selection handling.
+6. Style tables with appropriate CSS for borders, padding, and cell alignment.
+7. Test table creation, basic editing, and rendering in different viewports.
+8. Ensure keyboard navigation works within table cells using arrow keys.
+
+## 2. Enhance Tables with Advanced Operations [done]
+### Dependencies: 9.1
+### Description: Extend the basic table functionality with cell merging, splitting, and advanced table controls for row/column manipulation.
+### Details:
+1. Implement cell merging functionality using colSpan and rowSpan attributes.
+2. Create a table context menu with options for cell operations (merge, split, align).
+3. Add row and column insertion/deletion controls that appear on hover.
+4. Implement table header toggling for any row or column.
+5. Add cell background color and border styling options.
+6. Create table resizing functionality for columns (drag handles).
+7. Implement copy/paste support for table cells and regions.
+8. Test all operations with keyboard shortcuts and ensure accessibility compliance.
+9. Add unit tests for table operations and edge cases (empty cells, merged cells).
+
+<info added on 2025-06-03T09:54:33.563Z>
+## Implementation Details for Table Operations
+
+### Cell Merging Implementation
+```typescript
+// Example implementation for cell merging
+const handleCellMerge = () => {
+  editor.chain().focus().mergeOrSplit().run();
+  // Handles both merge and split based on current selection
+  // Uses internal TipTap detection for merge capability
+};
+```
+
+### Table Context Menu Architecture
+- **Component Structure**: Implement as a portal-based floating component to avoid z-index issues
+- **State Management**: 
+  ```typescript
+  const [menuState, setMenuState] = useState<{
+    isVisible: boolean;
+    position: { x: number, y: number };
+    tableNode: HTMLElement | null;
+    selectedCells: number; // For enabling/disabling merge operations
+  }>({ isVisible: false, position: { x: 0, y: 0 }, tableNode: null, selectedCells: 0 });
+  ```
+
+### Performance Optimization
+- Use `useCallback` for event handlers to prevent unnecessary re-renders
+- Implement event delegation on the table container rather than individual cells
+- Cache table structure information during context menu activation
+
+### Cell Selection Detection
+```typescript
+// Helper to determine if cells can be merged
+const canMergeCells = () => {
+  const { selection } = editor.state;
+  const { ranges } = selection;
+  
+  // Multiple cells must be selected and they must be adjacent
+  return ranges.length > 1 && isCellSelectionContinuous(ranges);
+};
+```
+
+### Accessibility Considerations
+- Add keyboard shortcuts for common operations (e.g., Alt+M for merge)
+- Ensure context menu is navigable via keyboard
+- Implement ARIA attributes for table operations
+- Add screen reader announcements for table structure changes
+
+### Edge Case Handling
+- Handle merged cells during row/column deletion
+- Manage table structure integrity when inserting near merged cells
+- Preserve content during split operations
+- Implement undo/redo stack for complex table operations
+
+### Unit Testing Strategy
+```typescript
+// Example test case for cell merging
+test('should merge selected cells correctly', async () => {
+  // Setup table with initial structure
+  editor.commands.insertTable({ rows: 3, cols: 3 });
+  
+  // Select cells to merge
+  simulateCellSelection(editor, { fromRow: 0, fromCol: 0, toRow: 1, toCol: 1 });
+  
+  // Trigger merge
+  editor.commands.mergeCells();
+  
+  // Assert merged cell has correct rowspan and colspan
+  const mergedCell = editor.view.dom.querySelector('td[rowspan="2"][colspan="2"]');
+  expect(mergedCell).not.toBeNull();
+});
+```
+</info added on 2025-06-03T09:54:33.563Z>
+
+## 3. Implement Nested List Functionality [done]
+### Dependencies: None
+### Description: Create a robust nested list system with proper indentation, list type conversion, and keyboard shortcuts for efficient list management.
+### Details:
+1. Extend TipTap's BulletList and OrderedList extensions to support multiple nesting levels.
+2. Implement Tab and Shift+Tab keyboard shortcuts for list indentation/outdentation.
+3. Add UI controls for increasing/decreasing indentation levels.
+4. Create functionality to convert between ordered and unordered lists.
+5. Implement proper list styling with appropriate markers for each nesting level.
+6. Add drag-and-drop reordering for list items (both within and across nesting levels).
+7. Ensure correct handling of list continuation when pressing Enter at the end of list items.
+8. Test nested list behavior with various content types (text, links, images).
+9. Add accessibility attributes for screen readers to properly announce list structures.
+
+<info added on 2025-06-03T09:59:16.937Z>
+## Implementation Details for Nested List Functionality
+
+### TipTap Extension Configuration
+```typescript
+// Custom list extension configuration
+const editor = useEditor({
+  extensions: [
+    // Disable default StarterKit lists and configure custom ones
+    StarterKit.configure({
+      bulletList: false,
+      orderedList: false,
+    }),
+    BulletList.configure({
+      HTMLAttributes: {
+        class: 'bullet-list',
+      },
+      keepMarks: true,
+      keepAttributes: true,
+    }),
+    OrderedList.configure({
+      HTMLAttributes: {
+        class: 'ordered-list',
+      },
+      keepMarks: true,
+      keepAttributes: true,
+    }),
+    // Additional list-related extensions
+  ],
+})
+```
+
+### Keyboard Shortcut Implementation
+```typescript
+// Tab/Shift+Tab handler for list indentation
+const handleTabKey = (event: KeyboardEvent) => {
+  const { editor } = this.props;
+  
+  if (!editor.isActive('bulletList') && !editor.isActive('orderedList') && !editor.isActive('taskList')) {
+    return;
+  }
+  
+  event.preventDefault();
+  
+  if (event.shiftKey) {
+    // Lift list item (decrease indentation)
+    editor.chain().focus().liftListItem('listItem').run();
+  } else {
+    // Sink list item (increase indentation)
+    editor.chain().focus().sinkListItem('listItem').run();
+  }
+};
+```
+
+### CSS for Nested List Styling
+```css
+/* Multi-level list styling */
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ul ul {
+  list-style-type: circle;
+}
+
+.ProseMirror ul ul ul {
+  list-style-type: square;
+}
+
+.ProseMirror ul ul ul ul {
+  list-style-type: '▸';
+}
+
+/* Ordered list counter styles */
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ol ol {
+  list-style-type: lower-alpha;
+}
+
+.ProseMirror ol ol ol {
+  list-style-type: lower-roman;
+}
+
+/* List animation for better UX */
+.ProseMirror li {
+  transition: margin 0.2s ease;
+}
+```
+
+### List Type Conversion Logic
+```typescript
+// Convert between list types while preserving structure
+const convertListType = (editor, listType) => {
+  // Store current selection and list structure
+  const { from, to } = editor.state.selection;
+  
+  // Determine if we need to wrap or toggle
+  if (editor.isActive(listType)) {
+    // Toggle off the list
+    editor.chain().focus().toggleList(listType).run();
+  } else if (editor.isActive('bulletList') || editor.isActive('orderedList') || editor.isActive('taskList')) {
+    // First unwrap from current list type
+    ['bulletList', 'orderedList', 'taskList'].forEach(type => {
+      if (editor.isActive(type)) {
+        editor.chain().focus().toggleList(type).run();
+      }
+    });
+    
+    // Then wrap with new list type
+    editor.chain().focus().toggleList(listType).run();
+  } else {
+    // Simply wrap with the list type
+    editor.chain().focus().toggleList(listType).run();
+  }
+};
+```
+
+### Accessibility Enhancements
+```typescript
+// Add proper ARIA attributes to list elements
+const enhanceListAccessibility = () => {
+  const listExtension = Node.create({
+    // Extension configuration
+    addAttributes() {
+      return {
+        role: {
+          default: 'list',
+          parseHTML: element => element.getAttribute('role') || 'list',
+          renderHTML: attributes => {
+            return { role: attributes.role };
+          },
+        },
+      };
+    },
+    // Other extension methods
+  });
+  
+  return listExtension;
+};
+```
+</info added on 2025-06-03T09:59:16.937Z>
+
+## 4. Develop Link Insertion and Management System [done]
+### Dependencies: None
+### Description: Create a comprehensive link management system with link insertion, editing, preview, and validation capabilities.
+### Details:
+1. Enhance TipTap's Link extension with a custom modal dialog for link insertion/editing.
+2. Implement link validation with URL pattern checking and protocol prefixing.
+3. Create a link preview tooltip that shows on hover with options to edit or remove.
+4. Add support for target attributes (open in new tab, same tab).
+5. Implement automatic link detection when pasting URLs.
+6. Add keyboard shortcut (Ctrl/Cmd+K) for quick link creation.
+7. Create a right-click context menu for link operations.
+8. Implement link title attributes for improved accessibility.
+9. Add unit tests for link creation, editing, and validation scenarios.
+10. Ensure keyboard accessibility for all link management operations.
+
+<info added on 2025-06-03T10:04:59.776Z>
+## Implementation Details for Link Management System
+
+### Technical Architecture
+- **Custom Extension Pattern**: Extended TipTap's Link extension using the Extension API with custom commands and options
+- **State Management**: Implemented React context for maintaining link state across editor sessions
+- **Event Delegation**: Used bubbling for efficient link event handling without individual listeners
+
+### Component Implementation Notes
+- **LinkManagement Modal**:
+  ```tsx
+  // URL validation regex with support for international domains
+  const URL_PATTERN = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
+  
+  // Smart protocol prefixing function
+  const ensureProtocol = (url: string): string => {
+    if (!url) return '';
+    if (/^mailto:|^tel:/i.test(url)) return url;
+    return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  };
+  ```
+
+- **LinkTooltip Component**:
+  ```tsx
+  // Smart positioning logic to prevent screen overflow
+  useEffect(() => {
+    if (tooltipRef.current && linkRef.current) {
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      const linkRect = linkRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      
+      // Adjust position if tooltip would overflow right edge
+      if (linkRect.left + tooltipRect.width > viewportWidth - 20) {
+        setPosition({ top: linkRect.bottom + 5, right: viewportWidth - linkRect.right });
+      } else {
+        setPosition({ top: linkRect.bottom + 5, left: linkRect.left });
+      }
+    }
+  }, [visible]);
+  ```
+
+### Advanced Features Implementation
+- **Debounced URL Validation**: Implemented 300ms debounce for validation to prevent UI jank during typing
+- **Link Type Detection**:
+  ```typescript
+  const detectLinkType = (url: string): 'web' | 'email' | 'phone' | 'unknown' => {
+    if (!url) return 'unknown';
+    if (/^mailto:|@/.test(url)) return 'email';
+    if (/^tel:|^\+?\d{8,}$/.test(url)) return 'phone';
+    return 'web';
+  };
+  ```
+- **Clipboard Integration**: Enhanced paste handling with automatic link detection:
+  ```typescript
+  editor.on('paste', ({ clipboardData }) => {
+    const text = clipboardData?.getData('text/plain');
+    if (text && URL_PATTERN.test(text) && !editor.isActive('link')) {
+      editor.commands.setLink({ href: ensureProtocol(text) });
+      return true; // Prevent default paste
+    }
+  });
+  ```
+
+### Accessibility Enhancements
+- **ARIA Attributes**: Added proper aria-labels and roles:
+  ```html
+  <button 
+    aria-label="Edit link" 
+    role="button"
+    class="link-edit-button"
+    onClick={handleEditClick}
+  >
+    <EditIcon />
+  </button>
+  ```
+- **Focus Management**: Implemented focus trapping in modal dialog with keyboard navigation
+- **Screen Reader Support**: Added descriptive text and announcements for link operations
+
+### Performance Optimizations
+- **Memoized Components**: Used React.memo for tooltip components to prevent unnecessary re-renders
+- **Lazy Loading**: Implemented dynamic imports for modal components to reduce initial bundle size
+- **Event Cleanup**: Proper removal of event listeners in useEffect cleanup functions
+</info added on 2025-06-03T10:04:59.776Z>
+
+## 5. Implement Text Spacing and Indentation Controls [done]
+### Dependencies: None
+### Description: Add fine-grained typography controls for text spacing, line height, paragraph indentation, and alignment options.
+### Details:
+1. Create custom TipTap extensions for controlling line height and letter spacing.
+2. Implement paragraph indentation controls (first line, hanging indent).
+3. Add text alignment options (left, center, right, justify).
+4. Create a typography dropdown with common spacing presets.
+5. Implement margin and padding controls for block elements.
+6. Add column layout options for text (single, two-column, three-column).
+7. Create a visual indicator for spacing changes in the editor.
+8. Implement keyboard shortcuts for common spacing operations.
+9. Test spacing controls with different content types and ensure responsive behavior.
+10. Add persistence of spacing settings in the document model.
+
+<info added on 2025-06-03T10:11:12.153Z>
+Here's the additional technical implementation information for the text spacing and indentation controls:
+
+## Technical Implementation Details
+
+### Extension Architecture
+```typescript
+// Sample code structure for AdvancedTypography extension
+export const AdvancedTypography = Extension.create({
+  name: 'advancedTypography',
+  
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['paragraph', 'heading'],
+        attributes: {
+          lineHeight: { default: 'normal', parseHTML: el => el.style.lineHeight },
+          letterSpacing: { default: 'normal', parseHTML: el => el.style.letterSpacing },
+          textIndent: { default: '0', parseHTML: el => el.style.textIndent },
+          marginTop: { default: '0', parseHTML: el => el.style.marginTop },
+          marginBottom: { default: '0', parseHTML: el => el.style.marginBottom },
+          columns: { default: 1, parseHTML: el => el.style.columnCount },
+          textDirection: { default: 'ltr', parseHTML: el => el.dir || el.style.direction }
+        }
+      }
+    ]
+  },
+  
+  addCommands() {
+    return {
+      setLineHeight: (lineHeight) => ({ chain }) => {
+        return chain().updateAttributes('paragraph', { lineHeight }).run()
+      },
+      // Additional commands for other typography properties...
+    }
+  },
+  
+  addKeyboardShortcuts() {
+    return {
+      'Mod-Alt-L': () => this.editor.commands.setLineHeight('1.5'),
+      'Mod-Alt-T': () => this.editor.commands.setLetterSpacing('0.05em'),
+      // Additional shortcuts...
+    }
+  }
+})
+```
+
+### UI Component Integration
+```tsx
+// Simplified implementation of the typography dropdown component
+const TypographyDropdown: React.FC = () => {
+  const { editor } = useEditor();
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const lineHeightOptions = [
+    { label: 'Tight', value: '1.2', icon: <LineHeightTightIcon /> },
+    { label: 'Normal', value: '1.5', icon: <LineHeightNormalIcon /> },
+    { label: 'Relaxed', value: '1.8', icon: <LineHeightRelaxedIcon /> },
+    { label: 'Loose', value: '2.0', icon: <LineHeightLooseIcon /> },
+  ];
+  
+  const getCurrentLineHeight = () => {
+    // Extract current line height from editor state
+    return editor?.getAttributes('paragraph').lineHeight || '1.5';
+  };
+  
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="typography-button">
+          <LineHeightIcon />
+          <span>Typography</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Line Height</DropdownMenuLabel>
+          {lineHeightOptions.map(option => (
+            <DropdownMenuItem 
+              key={option.value}
+              onClick={() => editor?.commands.setLineHeight(option.value)}
+              className={getCurrentLineHeight() === option.value ? 'active' : ''}
+            >
+              {option.icon}
+              <span>{option.label}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+        {/* Additional control groups for letter spacing, indentation, etc. */}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+```
+
+### CSS Implementation
+```css
+/* Typography-specific CSS */
+[data-columns="2"] {
+  column-count: 2;
+  column-gap: 2rem;
+}
+
+[data-columns="3"] {
+  column-count: 3;
+  column-gap: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  [data-columns="3"] {
+    column-count: 2; /* Reduce columns on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  [data-columns] {
+    column-count: 1; /* Single column on mobile */
+  }
+}
+
+/* Visual indicators for spacing changes */
+.ProseMirror .has-custom-spacing {
+  position: relative;
+}
+
+.ProseMirror .has-custom-spacing::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  width: 3px;
+  height: 100%;
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 2px;
+}
+```
+
+### Performance Optimization
+- Debounced typography control updates to prevent excessive re-rendering
+- Memoized typography component to reduce unnecessary re-renders
+- Used CSS variables for typography values to minimize DOM manipulation
+- Implemented efficient attribute updates that only modify changed properties
+
+### Accessibility Enhancements
+- Added ARIA labels to all typography controls
+- Implemented keyboard navigation through tab indexes and focus management
+- Added screen reader descriptions for typography settings
+- Ensured contrast ratios meet WCAG AA standards for all UI elements
+</info added on 2025-06-03T10:11:12.153Z>
+
+## 6. Create Find and Replace Functionality [done]
+### Dependencies: None
+### Description: Implement a comprehensive search and replace system with options for case sensitivity, whole word matching, and regular expression support.
+### Details:
+1. Create a search UI component with input field and navigation controls.
+2. Implement text search algorithm with highlighting of matches in the editor.
+3. Add replace and replace all functionality.
+4. Implement search options: case sensitivity, whole word matching, regex support.
+5. Create keyboard shortcuts for search operations (Ctrl/Cmd+F, F3 for next match).
+6. Add search history to allow quick access to previous searches.
+7. Implement match counting and display (e.g., "3 of 10 matches").
+8. Create smooth scrolling to bring matches into view.
+9. Test with various content types, including tables and nested lists.
+10. Ensure the search UI is responsive and accessible.
+
+## 7. Add Special Characters Insertion Menu [done]
+### Dependencies: None
+### Description: Implement a comprehensive special characters menu for inserting symbols, emojis, mathematical notations, and other special characters.
+### Details:
+1. Create a modal dialog with categorized special characters (symbols, math, currency, arrows, emoji).
+2. Implement a search functionality to quickly find specific characters.
+3. Add recently used characters section for quick access.
+4. Create a grid layout for efficient character browsing.
+5. Implement character insertion at cursor position.
+6. Add hover tooltips showing character name and Unicode value.
+7. Create keyboard navigation for the character grid.
+8. Implement favorites or bookmarking for commonly used characters.
+9. Test insertion in different contexts (paragraphs, headings, tables).
+10. Ensure proper rendering of all special characters across browsers.
+
+## 8. Integrate Advanced Features into Toolbar and Context Menus [pending]
+### Dependencies: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7
+### Description: Create a cohesive UI experience by integrating all advanced features into the editor toolbar and context-sensitive menus with keyboard shortcuts.
+### Details:
+1. Design and implement a responsive toolbar layout that accommodates all new features.
+2. Create dropdown menus for feature groups to prevent toolbar overcrowding.
+3. Implement context-sensitive toolbars that appear based on selection type (table, list, text).
+4. Create right-click context menus with relevant options for each content type.
+5. Add keyboard shortcut overlay (accessible via Ctrl/Cmd+/) showing all available shortcuts.
+6. Implement toolbar customization to allow users to prioritize frequently used features.
+7. Create tooltip help for each toolbar button with shortcut information.
+8. Add visual feedback for active formatting options.
+9. Implement A/B testing to optimize toolbar layout for common operations.
+10. Ensure all UI components are fully accessible via keyboard and screen readers.
+

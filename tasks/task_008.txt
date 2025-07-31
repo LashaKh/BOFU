@@ -1,0 +1,126 @@
+# Task ID: 8
+# Title: Implement Markdown Support
+# Status: done
+# Dependencies: 7
+# Priority: medium
+# Description: Add markdown input/output capabilities to the editor
+# Details:
+Implement a comprehensive markdown support system that transforms the ArticleEditor into a hybrid rich text/markdown editor with full bidirectional conversion capabilities. This includes:
+
+1. **TipTap Markdown Integration**:
+   - Install and configure @tiptap/extension-markdown
+   - Set up markdown-it parser with proper extensions
+   - Configure serialization with formatting preservation
+   - Ensure compatibility with existing TipTap extensions
+
+2. **Conversion System**:
+   - Implement getMarkdown() and setMarkdown() functions
+   - Add auto-conversion for markdown syntax as user types
+   - Ensure format preservation and proper special character handling
+
+3. **Preview Mode Implementation**:
+   - Create toggle button in toolbar
+   - Implement split view and full preview modes
+   - Add real-time preview updates and scroll synchronization
+
+4. **File Operations**:
+   - Support import/export of .md files
+   - Add drag & drop support for markdown files
+   - Implement file validation and efficient large file handling
+
+5. **Live Markdown Shortcuts**:
+   - Add support for heading shortcuts (# → H1, etc.)
+   - Implement list shortcuts (* or - → bullet list, etc.)
+   - Add formatting shortcuts (**text** → bold, etc.)
+   - Support block shortcuts (``` → code block, etc.)
+   - Enable link shortcuts ([text](url) → links, etc.)
+
+6. **Enhanced Toolbar Features**:
+   - Add dedicated markdown section to toolbar
+   - Include preview toggle button
+   - Add import/export buttons
+   - Provide markdown help/syntax guide
+   - Implement source mode for raw markdown editing
+
+# Test Strategy:
+1. **TipTap Markdown Integration Tests**:
+   - Verify proper installation and configuration of markdown extensions
+   - Test markdown-it parser with various syntax patterns
+   - Validate serialization with complex formatting cases
+   - Confirm compatibility with all existing TipTap extensions
+
+2. **Conversion System Tests**:
+   - Test getMarkdown() with various editor states
+   - Validate setMarkdown() with different markdown inputs
+   - Verify auto-conversion for all supported markdown syntax
+   - Test special character handling and escaping
+
+3. **Preview Mode Tests**:
+   - Validate toggle functionality between edit and preview modes
+   - Test split view and full preview rendering
+   - Verify real-time updates in preview as content changes
+   - Test scroll synchronization between editor and preview
+
+4. **File Operation Tests**:
+   - Test import of various markdown files
+   - Verify export functionality and output format
+   - Validate drag & drop functionality
+   - Test with large markdown documents for performance
+
+5. **Markdown Shortcuts Tests**:
+   - Verify all heading, list, formatting, block, and link shortcuts
+   - Test combinations of shortcuts and edge cases
+
+6. **Toolbar Feature Tests**:
+   - Validate all markdown toolbar functions
+   - Test preview toggle and source mode switching
+   - Verify help documentation accessibility
+
+7. **Integration Tests**:
+   - Test API compatibility with markdown content
+   - Verify proper database storage and retrieval
+   - Test image handling within markdown content
+
+# Subtasks:
+## 8.1. TipTap Markdown Extension Setup [done]
+### Dependencies: None
+### Description: Install and configure @tiptap/extension-markdown for basic markdown parsing and serialization
+### Details:
+
+
+## 8.2. Implement Bidirectional Conversion [done]
+### Dependencies: None
+### Description: Create getMarkdown() and setMarkdown() functions for converting between editor JSON state and markdown text
+### Details:
+
+
+## 8.3. Create Preview Mode Toggle [done]
+### Dependencies: None
+### Description: Implement split view and full preview modes with real-time updates and scroll synchronization
+### Details:
+
+
+## 8.4. Add Live Markdown Shortcuts [done]
+### Dependencies: None
+### Description: Implement auto-conversion for markdown syntax (headings, lists, formatting, blocks, links) as user types
+### Details:
+
+
+## 8.5. Implement File Operations [done]
+### Dependencies: None
+### Description: Add import/export functionality for .md files with drag & drop support and file validation
+### Details:
+
+
+## 8.6. Enhance Toolbar with Markdown Features [done]
+### Dependencies: None
+### Description: Add dedicated markdown section to toolbar with preview toggle, import/export buttons, and syntax help
+### Details:
+
+
+## 8.7. Test Markdown Integration [done]
+### Dependencies: None
+### Description: Comprehensive testing of all markdown features including conversion, shortcuts, preview, and file operations
+### Details:
+
+

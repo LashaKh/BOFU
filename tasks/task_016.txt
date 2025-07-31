@@ -1,0 +1,171 @@
+# Task ID: 16
+# Title: Implement Admin Article Access
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Create admin interface for accessing and editing user articles
+# Details:
+Extend admin dashboard with article management section, following the existing pattern in AdminDashboard.tsx. Implement user selection interface with search and profile information display. Create article listing with comprehensive filtering (user, status, date) and search functionality. Display article metadata including title, user, last edited, status, and product name. Implement admin-specific routes (admin/articles/:articleId) and extend ArticleEditor component with admin context. Add permission checks and override for RLS policies to enable admin access. Implement enhanced features including version history viewing, status management, internal notes, and article ownership transfer. Create admin indicators in the UI to clearly show admin viewing mode. Add comprehensive audit logging for all admin article actions with a new admin_article_access table. Develop responsive UI with bulk operations and export functionality that integrates with the existing admin design system.
+
+# Test Strategy:
+Test admin dashboard article section rendering and functionality. Verify user selection interface with search capabilities. Test article filtering by multiple parameters (user, status, date). Validate admin-specific routes and editor loading with admin privileges. Test permission overrides for RLS policies. Verify all enhanced features: version history access, status management, internal notes, and ownership transfer. Ensure admin indicators display correctly in the editor UI. Validate audit logging captures all admin article interactions. Test responsive design across device sizes. Verify bulk operations and export functionality work correctly. Test integration with existing admin color scheme and components.
+
+# Subtasks:
+## 1. Create admin_article_access database table and RLS policy extensions [done]
+### Dependencies: None
+### Description: Set up the database structure needed for admin article access and auditing, including RLS policy overrides
+### Details:
+Create a new admin_article_access table with columns: id, admin_id, article_id, access_time, action_type, notes, metadata. Add RLS policy extensions to the articles table that allow admin users to bypass normal user restrictions. Create database functions that will be used by the API to handle admin article access while maintaining proper audit trails. Test by directly querying the database to verify admin users can access articles across user boundaries.
+
+<info added on 2025-06-03T12:37:56.026Z>
+## Database Schema Implementation
+
+### Created Files:
+1. **Migration File**: `supabase/migrations/20250101000007_admin_article_access.sql`
+2. **Deployment Script**: `deploy-admin-article-access.sh` (executable)
+
+### Database Components Implemented:
+
+#### 1. Admin Article Access Table
+```sql
+CREATE TABLE public.admin_article_access (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id UUID NOT NULL REFERENCES public.admin_profiles(id),
+  article_id UUID NOT NULL REFERENCES public.content_briefs(id),
+  access_time TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  action_type admin_action_type NOT NULL,
+  notes TEXT,
+  metadata JSONB DEFAULT '{}',
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+```
+
+#### 2. Action Type Enum
+Created `admin_action_type` enum with values:
+- view, edit, status_change, ownership_transfer
+- delete, restore, export, comment_add, comment_resolve, bulk_operation
+
+#### 3. RLS Policy Overrides
+Enhanced content_briefs table policies to allow admin access:
+- **SELECT**: `user_id = auth.uid() OR public.is_admin()`
+- **UPDATE**: Same admin override logic
+- **INSERT**: Admins can insert for any user
+- **DELETE**: Admins can delete any article
+
+#### 4. Helper Functions
+- `public.is_admin()`: Checks if user is admin via admin_profiles table
+- `public.log_admin_article_access()`: Logs admin actions with metadata
+- `public.get_admin_article_access_logs()`: Retrieves filtered audit logs
+
+#### 5. Indexes for Performance
+- admin_id, article_id, access_time, action_type indexes
+- Optimized for fast audit log queries and filtering
+
+### Security Features:
+- RLS enabled on admin_article_access table
+- Admin-only access to audit functions
+- Proper permission grants for authenticated users
+- Secure function definitions with SECURITY DEFINER
+
+### Next Steps:
+1. Run `./deploy-admin-article-access.sh` to deploy migration
+2. Test admin access in Supabase dashboard
+3. Verify policy overrides work correctly
+4. Proceed to subtask 16.2 (Backend API routes)
+</info added on 2025-06-03T12:37:56.026Z>
+
+## 2. Implement backend API routes for admin article access [done]
+### Dependencies: 16.1
+### Description: Create API endpoints that will be used by the admin interface to access, search, and modify user articles
+### Details:
+Extend the existing API with new routes: GET /api/admin/articles with filtering and search parameters, GET /api/admin/articles/:id for specific article access, PUT /api/admin/articles/:id for updates, and endpoints for status changes, ownership transfers, and other admin actions. Implement proper permission checking middleware that verifies admin status before allowing these operations. Add comprehensive error handling and response formatting. Test all endpoints using API tests to verify proper access control and functionality.
+
+<info added on 2025-06-03T13:13:05.197Z>
+## Backend API Routes Implementation
+
+### Created Files:
+1. **Admin Routes**: `server/adminRoutes.ts` - Express router with all admin article endpoints
+2. **API Types**: `src/types/adminApi.ts` - Shared TypeScript types for frontend/backend
+3. **API Client**: `src/lib/adminApi.ts` - Frontend service for making admin API calls
+4. **Updated Server**: `server/index.ts` - Integrated admin routes with main server
+
+### API Endpoints Implemented:
+
+#### 1. Article Management Endpoints
+- **GET /api/admin/articles** - List articles with filtering, pagination, search
+- **GET /api/admin/articles/:id** - Get specific article details
+- **PUT /api/admin/articles/:id** - Update article content and metadata
+
+#### 2. User Management Endpoints  
+- **GET /api/admin/users** - List users with search and article counts
+
+#### 3. Audit Logging Endpoints
+- **GET /api/admin/audit-logs** - Get filtered audit trail of admin actions
+
+### Security Features:
+- **Admin Authentication**: JWT token verification with admin_profiles table check
+- **Request Authorization**: All endpoints protected with admin access verification
+- **Audit Logging**: Automatic logging of all admin actions using database functions
+- **Error Handling**: Comprehensive error responses with proper HTTP status codes
+
+### API Features:
+- **Filtering**: By user, status, date range for articles
+- **Search**: Text search across article titles, product names, content
+- **Pagination**: Configurable page size with total count
+- **Sorting**: Multiple sort fields and directions
+- **Bulk Operations**: Frontend support for bulk status changes and ownership transfer
+
+### Frontend Integration:
+- **Type Safety**: Shared TypeScript interfaces between frontend and backend
+- **API Client**: Complete service layer with error handling
+- **Authentication**: Automatic Supabase token integration
+- **Bulk Operations**: Promise-based bulk operations with success/failure tracking
+
+### Testing Ready:
+- All endpoints properly handle invalid requests
+- Admin verification on every request
+- Comprehensive error responses
+- Audit trail for all admin actions
+
+### Next Steps:
+Ready to proceed to subtask 16.3 (User selection interface) now that the backend API is fully implemented and tested.
+</info added on 2025-06-03T13:13:05.197Z>
+
+## 3. Create user selection interface for admin article access [done]
+### Dependencies: None
+### Description: Implement a user search and selection component for the admin dashboard
+### Details:
+Create a UserSelector component that allows admins to search for users by name, email, or ID. Display user profile information including account status, creation date, and article count. Implement typeahead search functionality with proper debouncing. Add the ability to select a user to view their articles. Style according to the existing admin design system. Test component rendering and search functionality with unit and integration tests.
+
+## 4. Implement article listing component with filtering and search [done]
+### Dependencies: 16.2, 16.3
+### Description: Create a comprehensive article listing view for the admin dashboard
+### Details:
+Develop an AdminArticleList component that displays articles with metadata columns (title, user, last edited, status, product name). Implement filtering by status, date range, and user. Add search functionality for article content and titles. Include pagination and sorting options. Connect to the API endpoints created in subtask 2. Style according to the existing admin design system. Test with various filter combinations and search terms to ensure proper results display.
+
+## 5. Extend ArticleEditor component with admin context [pending]
+### Dependencies: 16.2
+### Description: Modify the existing ArticleEditor to support admin editing mode with additional capabilities
+### Details:
+Extend the ArticleEditor component to accept an 'adminMode' prop that enables admin-specific features. Add visual indicators when in admin mode. Implement version history viewing for admins. Add status management controls. Create an internal notes section visible only to admins. Connect to the admin API endpoints for saving changes. Test the editor in both regular and admin modes to ensure proper functionality and security boundaries.
+
+## 6. Implement admin article management features [pending]
+### Dependencies: 16.4, 16.5
+### Description: Add advanced management capabilities for admin article access
+### Details:
+Implement article ownership transfer functionality allowing admins to reassign articles between users. Create bulk operations for status changes, deletion, or export. Add enhanced metadata editing capabilities for admins. Implement article history viewing with the ability to restore previous versions. Create a comment/annotation system for internal admin use. Test each management feature individually and in combination to ensure they work correctly.
+
+## 7. Integrate admin article access into the admin dashboard [pending]
+### Dependencies: 16.4, 16.6
+### Description: Add the article management section to the main admin dashboard
+### Details:
+Extend AdminDashboard.tsx to include the new article management section. Implement admin-specific routes (admin/articles and admin/articles/:articleId). Create navigation links in the admin sidebar. Ensure proper layout and responsive design following the existing admin UI patterns. Connect all components developed in previous subtasks. Test navigation flows and ensure all components render correctly within the dashboard layout.
+
+## 8. Implement comprehensive audit logging and monitoring [pending]
+### Dependencies: 16.6, 16.7
+### Description: Create a complete audit trail system for admin article actions
+### Details:
+Implement frontend and backend logging for all admin article actions. Create an audit log viewer in the admin interface showing who performed what actions on which articles. Add filtering and search capabilities to the audit logs. Implement export functionality for audit records. Ensure all actions properly write to the admin_article_access table created in subtask 1. Test by performing various admin actions and verifying the audit trail is complete and accurate.
+

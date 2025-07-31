@@ -1,0 +1,148 @@
+# Task ID: 21
+# Title: Implement Export Functionality
+# Status: done
+# Dependencies: 7, 8
+# Priority: low
+# Description: Create export options for articles in various formats
+# Details:
+Implement markdown export with proper formatting. Create PDF export with styling options. Add Word document export functionality. Implement HTML export with embedded images. Create plain text export option. Add export settings dialog for format-specific options. Implement download handling for exported files.
+
+# Test Strategy:
+Test each export format with various content types. Verify formatting preservation in exports. Test image handling in different formats. Validate large document exports. Test download functionality across browsers.
+
+# Subtasks:
+## 1. Implement Core Export Architecture and Markdown/Text Export [done]
+### Dependencies: None
+### Description: Create the foundational export architecture using the Strategy pattern and implement the first two export formats: Markdown and plain text export.
+### Details:
+1. Create an abstract ExportStrategy class/interface that defines the export method signature.
+2. Implement concrete strategies for Markdown and plain text exports using the showdown library for Markdown conversion.
+3. Create a factory function that returns the appropriate export strategy based on the selected format.
+4. Implement file naming utilities with proper slugification of article titles.
+5. Add error handling and proper UTF-8 encoding support for international content.
+6. Create file download handling using the file-saver library to trigger browser downloads.
+7. Test with articles of various lengths and content types including special characters.
+8. Ensure proper content sanitization for security.
+
+## 2. Implement PDF and HTML Export with Styling Options [done]
+### Dependencies: 21.1
+### Description: Add PDF and HTML export capabilities with styling options and image embedding support.
+### Details:
+1. Implement HTML export strategy with proper styling and embedded images using data URLs.
+2. Create PDF export using jsPDF or Puppeteer for HTML-to-PDF conversion with proper formatting.
+3. Add styling options for PDF export (page size, margins, fonts, etc.).
+4. Ensure images are properly embedded in both HTML and PDF exports.
+5. Implement accessibility features like proper tagging and alt text preservation.
+6. Add progress indicators for larger documents, especially for PDF generation which may take longer.
+7. Test PDF rendering across different content types and ensure proper handling of complex layouts.
+8. Implement proper error handling for failed conversions or oversized documents.
+
+<info added on 2025-06-04T10:03:19.114Z>
+Here's additional information to enhance the subtask:
+
+```
+## HTML Export Technical Implementation:
+- Implemented using DOMParser and document.implementation.createHTMLDocument()
+- Custom CSS applied via <style> tag with scoped styling to prevent conflicts
+- Images converted to base64 data URLs with proper MIME type detection
+- Implemented document sanitization using DOMPurify to prevent XSS vulnerabilities
+- Added metadata in <head> with document title, author, and export timestamp
+- Created print-specific media queries for optimal printed output
+
+## PDF Export Technical Details:
+- Implemented two-pass rendering: first pass measures content, second generates PDF
+- Used html2canvas with devicePixelRatio=2 for high-resolution text rendering
+- Implemented custom page break detection algorithm to prevent content splitting
+- Font embedding with subset optimization to reduce file size
+- Implemented document outline (bookmarks) based on heading structure
+- Added document properties (title, author, creation date) to PDF metadata
+
+## Performance Optimizations:
+- Implemented worker thread processing for PDF generation to prevent UI freezing
+- Added progressive rendering for large documents with cancelable export
+- Implemented image compression for PDF export to reduce file size
+- Added caching layer for repeated exports of the same content
+- Implemented memory usage monitoring to prevent crashes with large documents
+
+## Testing and Edge Cases:
+- Created automated tests for various content types including complex tables and nested lists
+- Verified rendering across different browsers and PDF viewers
+- Implemented proper handling of RTL text and non-Latin character sets
+- Added graceful degradation for unsupported features
+```
+</info added on 2025-06-04T10:03:19.114Z>
+
+## 3. Implement Word Export and Export Settings Dialog [done]
+### Dependencies: 21.1, 21.2
+### Description: Add Word document export functionality and create a user interface for export settings and options.
+### Details:
+1. Implement Word (DOCX) export strategy using the docx library.
+2. Ensure proper formatting, styling, and image embedding in Word documents.
+3. Create an export settings dialog component that allows users to:
+   - Select the desired export format
+   - Configure format-specific options (e.g., page size for PDFs, include images option)
+   - Preview export if applicable
+4. Implement settings persistence so user preferences are remembered.
+5. Add asynchronous processing for larger documents with proper user feedback.
+6. Create a unified export button/dropdown in the article view that triggers the settings dialog.
+7. Test the complete export flow across all formats with various document sizes.
+8. Add telemetry to track which export formats are most commonly used.
+
+<info added on 2025-06-04T10:07:50.004Z>
+## DOCX Export Implementation Details
+
+### Document Structure Implementation
+- Use `docx.Document` as the base container with proper sections and headers
+- Implement hierarchical structure with `docx.Paragraph`, `docx.TextRun`, and `docx.Table` elements
+- Apply consistent styling with `docx.Style` definitions for headings, body text, and captions
+
+### HTML to DOCX Conversion Logic
+```typescript
+function processHtmlNode(node: Node, document: Document): void {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent?.trim();
+    if (text) {
+      const paragraph = new Paragraph({
+        text: text,
+        spacing: { after: 200 }
+      });
+      document.addParagraph(paragraph);
+    }
+  } else if (node.nodeType === Node.ELEMENT_NODE) {
+    const element = node as Element;
+    switch (element.tagName.toLowerCase()) {
+      case 'h1':
+      case 'h2':
+        // Handle headings with proper styles
+        break;
+      case 'img':
+        // Process image embedding
+        break;
+      // Additional element handlers
+    }
+    
+    // Process children recursively
+    node.childNodes.forEach(child => processHtmlNode(child, document));
+  }
+}
+```
+
+### Export Settings UI Components
+- Create `DocxExportOptions` component with format-specific controls:
+  - Document orientation (portrait/landscape)
+  - Page margins configuration
+  - Header/footer inclusion toggle
+  - Table of contents generation option
+- Implement live preview thumbnail generation for DOCX exports
+
+### Error Handling Strategy
+- Implement graceful fallbacks for unsupported HTML elements
+- Add detailed error logging for debugging complex document conversion issues
+- Provide user-friendly error messages for common failure scenarios
+
+### Performance Optimizations
+- Implement document chunking for large articles to prevent UI freezing
+- Use Web Workers for background processing of complex documents
+- Add progress indicators for documents with many embedded images
+</info added on 2025-06-04T10:07:50.004Z>
+

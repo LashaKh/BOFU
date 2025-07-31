@@ -1,0 +1,83 @@
+# Task ID: 15
+# Title: Implement Comment Resolution Workflow
+# Status: done
+# Dependencies: 14
+# Priority: low
+# Description: Create the workflow for resolving, reopening, and tracking comment status
+# Details:
+Build upon the existing comment system infrastructure to implement a comprehensive comment resolution workflow. The system already has comment API infrastructure (src/lib/commentApi.ts), database schema (article_comments table), basic CRUD operations, comment status enum ('active' | 'resolved' | 'archived'), and basic status update functions.
+
+**Enhanced Resolution UI Components**:
+- Create CommentResolutionPanel component for bulk operations
+- Enhance CommentThread with resolution indicators and buttons
+- Add resolution status badges and visual states
+- Implement resolution confirmation dialogs
+
+**Advanced Status Management**:
+- Add status change history tracking (new table: comment_status_history)
+- Implement smart resolution suggestions based on activity
+- Add auto-resolution rules for inactive comments
+- Create resolution templates for common scenarios
+
+**Resolution Analytics & Reporting**:
+- Build resolution rate dashboard
+- Track average resolution time per user/article
+- Create resolution performance metrics
+- Generate weekly/monthly resolution reports
+
+**Notification & Workflow Integration**:
+- Send notifications when comments are resolved/reopened
+- Email digest for unresolved comments
+- Integration with admin approval workflow
+- Slack/Discord webhook support for team notifications
+
+**Advanced Filtering & Search**:
+- Filter by resolution status with date ranges
+- Search resolved comments by content/author
+- Create "my unresolved comments" view
+- Implement resolution due dates and reminders
+
+**Batch Operations & Admin Tools**:
+- Mass resolution with reason templates
+- Bulk reopen with workflow triggers
+- Admin override capabilities with audit trail
+- Export resolved comments for documentation
+
+# Test Strategy:
+Test each phase of the implementation plan separately:
+
+**Phase 1 (Enhanced UI Components)**:
+- Verify CommentResolutionPanel renders correctly and handles bulk operations
+- Test CommentThread resolution indicators and buttons for proper functionality
+- Validate status badges display correctly in different states
+- Test confirmation dialogs for user experience and validation
+
+**Phase 2 (Status History Tracking)**:
+- Verify history records are created for all status changes
+- Test database schema and relationships for comment_status_history
+- Validate API endpoints for history retrieval
+- Test history display in the UI
+
+**Phase 3 (Advanced Filtering)**:
+- Test all filter combinations with various data sets
+- Verify search functionality for resolved comments
+- Test performance with large datasets
+- Validate "my unresolved comments" view functionality
+
+**Phase 4 (Notification System)**:
+- Test notification delivery for status changes
+- Verify email digest generation and formatting
+- Test integration with admin approval workflow
+- Validate webhook functionality for external platforms
+
+**Phase 5 (Analytics)**:
+- Test dashboard metrics calculations
+- Verify report generation functionality
+- Test performance metrics accuracy
+- Validate data visualization components
+
+**General Testing**:
+- Cross-browser compatibility testing
+- Mobile responsiveness testing
+- Performance testing with large comment volumes
+- Security testing for admin operations

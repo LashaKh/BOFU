@@ -1,0 +1,19 @@
+# Task ID: 1
+# Title: Update Database Schema for Article Content
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Add the 'article_content' TEXT field and related fields to the 'content_briefs' table in Supabase
+# Details:
+Execute SQL migration to add the following fields to the existing content_briefs table which currently only has brief_content (JSON) and brief_content_text (TEXT) fields:
+
+1. article_content (TEXT) - to store the full article content
+2. article_version (INTEGER) - to track version history
+3. last_edited_at (TIMESTAMP) - to record when the article was last modified
+4. last_edited_by (UUID) - to record who last modified the article
+5. editing_status (ENUM with values: 'draft', 'editing', 'review', 'final') - to track article workflow status
+
+Set appropriate default values and constraints. Ensure backward compatibility with existing queries that use brief_content and brief_content_text fields.
+
+# Test Strategy:
+Verify schema changes in Supabase dashboard. Write test queries to confirm field addition and data integrity. Test with sample article content to ensure proper storage and retrieval. Specifically verify that existing brief_content and brief_content_text fields remain functional while the new article_content and editing fields work as expected.

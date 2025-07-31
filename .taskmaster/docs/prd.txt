@@ -1,0 +1,159 @@
+# Article Editor System Cleanup Project
+
+## Project Overview
+
+This project involves a comprehensive cleanup and refactoring of the BOFU AI article editing system to eliminate redundancy, improve maintainability, and optimize performance. The current system has evolved organically, resulting in duplicate components, scattered state management, and mixed responsibilities that need to be addressed.
+
+## Business Goals
+
+### Primary Objectives
+- Reduce codebase complexity by ~40% through elimination of redundant components
+- Improve developer productivity by creating clear separation of concerns
+- Enhance application performance through better code organization
+- Maintain 100% feature parity while improving code quality
+
+### Success Metrics
+- Bundle size reduction of 15-20%
+- Improved page load times for article editing
+- Reduced maintenance effort for future feature development
+- Zero regression in user functionality
+
+## Current State Analysis
+
+### Problem Areas
+1. **Component Redundancy**: ArticleEditorPage.tsx duplicates UnifiedArticleEditor.tsx functionality
+2. **Monolithic Components**: ArticleEditor.tsx has 2,391 lines with mixed responsibilities
+3. **API Inconsistency**: Multiple API patterns (legacy vs unified) create confusion
+4. **Complex Props**: 15+ props interfaces with deep prop drilling
+5. **Scattered State**: Real-time collaboration state managed in multiple locations
+
+### Active Components (Keep)
+- ArticleEditor.tsx (2,391 lines) - Core editor with admin/user modes
+- UnifiedArticleEditor.tsx (683 lines) - Main wrapper for routing
+- EditContentBrief.tsx (578 lines) - Content brief editor (different purpose)
+
+### Redundant Components (Remove)
+- ArticleEditorPage.tsx (454 lines) - Duplicates UnifiedArticleEditor functionality
+- ArticleEditorAdminTest.tsx (152 lines) - Test component only
+- Legacy routing redirects
+
+## Technical Requirements
+
+### Phase 1: Safe Redundancy Removal
+- Create backup branches for rollback capability
+- Remove ArticleEditorAdminTest.tsx test component
+- Remove legacy ArticleEditorPage.tsx component
+- Clean up associated routing and imports
+- Maintain all existing functionality during removal
+
+### Phase 2: Code Organization & Cleanup  
+- Extract reusable UI components from monolithic ArticleEditor.tsx
+- Create EditorToolbar, EditorStatusBar, and ImageHandler components
+- Simplify props interfaces from 15+ to core essential props
+- Implement single responsibility principle across components
+- Maintain backward compatibility with existing integrations
+
+### Phase 3: API Consolidation
+- Consolidate to single unified API pattern
+- Remove duplicate functions from legacy articleApi.ts
+- Update all components to use unified API consistently
+- Maintain existing API contracts for external consumers
+
+### Phase 4: State Management Simplification
+- Centralize all article-related state in UnifiedArticleEditor
+- Make ArticleEditor purely presentational component
+- Simplify real-time collaboration with single subscription point
+- Maintain existing real-time features and performance
+
+### Phase 5: Responsive & Mobile Optimization
+- Audit mobile-specific components for unused code
+- Consolidate layout logic using LayoutContext consistently
+- Ensure responsive design works across all breakpoints
+- Maintain existing mobile user experience
+
+### Phase 6: Testing & Validation
+- Comprehensive testing of user and admin workflows
+- Cross-browser compatibility validation
+- Performance metrics validation
+- Error handling scenario testing
+- Real-time collaboration testing
+
+### Phase 7: Deployment & Monitoring
+- Staged deployment plan with rollback capability
+- Performance monitoring setup
+- Error rate monitoring
+- Documentation updates
+
+## User Stories
+
+### As a Developer
+- I want clean, maintainable code so I can easily add new features
+- I want clear component boundaries so I can understand the system quickly
+- I want consistent API patterns so I don't have to learn multiple approaches
+- I want good error handling so I can debug issues efficiently
+
+### As a User
+- I want the article editor to load quickly and respond smoothly
+- I want all existing features to continue working without interruption
+- I want real-time collaboration to work seamlessly
+- I want consistent behavior across mobile and desktop
+
+### As an Admin
+- I want all admin features to continue working after cleanup
+- I want the AI co-pilot functionality to remain intact
+- I want user management features to be unaffected
+- I want performance improvements in admin workflows
+
+## Technical Constraints
+
+### Must Maintain
+- 100% feature parity with current functionality
+- Real-time collaboration capabilities
+- Mobile responsive design
+- Cross-browser compatibility
+- Admin and user mode separation
+- Authentication and permissions system
+
+### Performance Requirements
+- Page load time improvement of 10-15%
+- Memory usage optimization during editing
+- Bundle size reduction of 15-20%
+- Maintain sub-200ms auto-save response time
+
+### Quality Requirements
+- Zero introduction of new bugs
+- Maintain TypeScript strict mode compliance
+- Pass all existing ESLint rules
+- Maintain accessibility standards (WCAG 2.1 AA)
+
+## Rollback Plan
+
+### Emergency Rollback
+- Backup branch available for immediate rollback
+- Ability to revert individual phases
+- Production hotfix capability
+- Documentation of all changes for troubleshooting
+
+### Risk Mitigation
+- Comprehensive testing at each phase
+- Staged deployment approach
+- Performance monitoring during rollout
+- User acceptance testing before production
+
+## Timeline Expectations
+
+### Development Phase: 2-3 weeks
+- Phase 1: Safe Redundancy Removal (2-3 days)
+- Phase 2: Code Organization & Cleanup (5-7 days)
+- Phase 3: API Consolidation (2-3 days)
+- Phase 4: State Management Simplification (3-4 days)
+- Phase 5: Responsive & Mobile Optimization (2-3 days)
+- Phase 6: Testing & Validation (3-4 days)
+- Phase 7: Deployment & Monitoring (1-2 days)
+
+### Success Validation
+- All tests pass
+- Performance metrics improved
+- No user-reported regressions
+- Improved developer experience metrics
+- Successful staged deployment

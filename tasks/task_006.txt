@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: Integrate Editor with Generated Articles Page
+# Status: done
+# Dependencies: 4, 5
+# Priority: high
+# Description: Add the editor component to the existing Generated Articles page UI
+# Details:
+Modify the Generated Articles page to include an 'Edit in App' button alongside the Google Doc link. Create a modal or dedicated route for the editor view. Implement state management to handle transitions between article list and editor. Ensure proper loading states and error handling. Maintain existing Google Doc functionality while adding the new editing capability.
+
+# Test Strategy:
+Test UI integration with the existing page. Verify navigation between article list and editor. Test loading states and error scenarios. Ensure Google Doc links still function properly. Test across different devices and screen sizes.

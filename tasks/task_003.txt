@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Set Up Image Storage Infrastructure
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: Configure Supabase Storage for article images and create image attachment table
+# Details:
+Create a new Supabase Storage bucket 'article-images' with appropriate security policies. Set up CDN configuration for optimized delivery. Create 'article_images' table with fields: id (UUID), article_id (references content_briefs), storage_path (TEXT), filename (TEXT), alt_text (TEXT, nullable), caption (TEXT, nullable), position_data (JSONB, nullable), created_at (TIMESTAMP). Configure RLS policies for secure access.
+
+# Test Strategy:
+Test bucket creation and access policies. Upload sample images to verify storage functionality. Test database table with sample records. Verify CDN delivery of test images.

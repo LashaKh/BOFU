@@ -35,11 +35,12 @@ dev-debug.log
 node_modules/
 .vscode
 # OS specific
-# Task files
-tasks.json
-tasks/ 
 # Secret files
 .mcp.json
 .gemini/settings.json
 .cursor/mcp.json
 bofu11-complete.tar.gz
+
+# Task files
+# tasks.json
+# tasks/ 

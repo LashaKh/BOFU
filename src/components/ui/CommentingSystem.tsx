@@ -39,6 +39,7 @@ interface CommentingSystemProps {
     company_name?: string;
   } | null;
   inlineMode?: boolean; // Enable inline commenting instead of modal
+  editor?: any; // TipTap editor instance
 }
 
 interface TextSelection {
@@ -81,6 +82,7 @@ const CommentingSystemComponent = React.memo(({
   showResolutionPanel = false,
   adminUser = null,
   inlineMode = false,
+  editor,
 }: CommentingSystemProps) => {
   // Use a more specific console log that includes render timestamp
   const renderTimestamp = Date.now();
@@ -550,30 +552,53 @@ const CommentingSystemComponent = React.memo(({
   }, [editorRef]);
 
   // Enhanced comment click handler with immediate interaction flag setting
-  const handleCommentClick = useCallback((comment: ArticleComment) => {
+  const handleCommentClick = useCallback((comment: ArticleComment, fromHighlightedText: boolean = false) => {
     // Prevent clicks during delete operations
     if (loadingAction === `delete-${comment.id}`) {
       console.log('🚫 Ignoring click - comment is being deleted:', comment.id);
       return;
     }
     
-    console.log('🖱️ Comment clicked:', comment.id);
+    console.log('🖱️ Comment clicked:', comment.id, 'From highlighted text:', fromHighlightedText);
     
     // Set interaction flag IMMEDIATELY to prevent any selection changes
     setInteractionFlag(true, 1000);
     
-    // Toggle selection: if clicking the same comment, deselect it
-    if (highlightedCommentId === comment.id) {
-      console.log('🔄 Deselecting comment:', comment.id);
-      onHighlightComment(null);
-    } else {
-      console.log('🔄 Selecting comment:', comment.id);
+    // Different behavior based on where the click came from
+    if (fromHighlightedText) {
+      // When clicking from highlighted text, always select the comment (no toggle)
+      console.log('🎯 Selecting comment from highlighted text:', comment.id);
       onHighlightComment(comment.id);
       
-      // Scroll to the commented text in the editor
-      scrollToCommentText(comment);
+      // Don't scroll when clicking from highlighted text (user is already looking at it)
+    } else {
+      // When clicking from sidebar, toggle selection
+      if (highlightedCommentId === comment.id) {
+        console.log('🔄 Deselecting comment:', comment.id);
+        onHighlightComment(null);
+      } else {
+        console.log('🔄 Selecting comment:', comment.id);
+        onHighlightComment(comment.id);
+        
+        // Scroll to the commented text in the editor
+        scrollToCommentText(comment);
+      }
     }
   }, [highlightedCommentId, onHighlightComment, setInteractionFlag, scrollToCommentText]);
+
+  // Wrapper for CommentHighlightExtension to indicate clicks from highlighted text
+  const handleCommentClickFromHighlight = useCallback((comment: ArticleComment) => {
+    console.log('🌟 HIGHLIGHT CLICK: handleCommentClickFromHighlight called!', comment.id);
+    handleCommentClick(comment, true);
+  }, [handleCommentClick]);
+
+  // Update the TipTap extension with the click handler
+  useEffect(() => {
+    if (editor && editor.commands.updateOnCommentClick) {
+      console.log('📝 Updating CommentHighlightExtension click handler');
+      editor.commands.updateOnCommentClick(handleCommentClickFromHighlight);
+    }
+  }, [editor, handleCommentClickFromHighlight]);
 
   const handleClosePopover = () => {
     console.log('❌ Closing popover');

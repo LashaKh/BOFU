@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+
+console.log('🔥 ARTICLE EDITOR MODULE: File imported/loaded');
 import { createPortal } from 'react-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -300,6 +302,8 @@ const ArticleEditorComponent: React.FC<ArticleEditorProps> = ({
   externalContent,
   forceContentUpdate = false
 }) => {
+  console.log('🎯 BASIC RENDER: ArticleEditor function called');
+  
   // Layout context for responsive sidebar handling
   const { layout, setCommentsSidebarVisible } = useLayout();
   
@@ -636,7 +640,7 @@ const ArticleEditorComponent: React.FC<ArticleEditorProps> = ({
     console.log('🔥 handleCommentClick called with comment:', comment.id);
     console.log('📊 Current state - highlightedCommentId:', highlightedCommentId, 'showComments:', showComments);
     
-    // Set the highlighted comment first
+    // Always set the highlighted comment (no toggle when clicking from highlighted text)
     setHighlightedCommentId(comment.id);
     
     // Open the comments sidebar using both methods for compatibility
@@ -696,61 +700,234 @@ const ArticleEditorComponent: React.FC<ArticleEditorProps> = ({
 
   // Enhanced editor-specific click handler for comments
   useEffect(() => {
-    if (!editorRef.current) return;
+    console.log('🔧 Enhanced click handler useEffect running:', {
+      hasEditorRef: !!editorRef.current,
+      commentsLength: comments.length
+    });
+    
+    if (!editorRef.current) {
+      console.log('❌ No editorRef.current, skipping click handler setup');
+      return;
+    }
 
     const editorElement = editorRef.current;
+    console.log('✅ Setting up click handlers on editor element:', editorElement);
     
     const handleEditorMouseDown = (event: MouseEvent) => {
-      console.log('🎯 Editor mousedown detected:', { target: event.target, type: event.type });
+      console.log('🎯 Editor mousedown detected:', { 
+        target: event.target, 
+        type: event.type,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        timestamp: Date.now()
+      });
       
       const target = event.target as HTMLElement;
       
-      // Immediately check if we're clicking on comment highlighted text
-      const elementsAtPoint = document.elementsFromPoint(event.clientX, event.clientY);
-      console.log('🔍 All elements at click point:', elementsAtPoint.map(el => ({ 
-        tag: el.tagName, 
-        classes: Array.from(el.classList || []),
-        isCommentHighlight: el.classList.contains('comment-highlight-tiptap'),
-        commentId: el.getAttribute('data-comment-id')
-      })));
+      // First check direct target
+      if (target.classList?.contains('comment-highlight-tiptap')) {
+        const commentId = target.getAttribute('data-comment-id');
+        const comment = comments.find(c => c.id === commentId);
+        
+        console.log('🎯 DIRECT TARGET is comment highlight:', { commentId, comment: !!comment });
+        
+        if (comment && comment.status !== 'resolved') {
+          console.log('✅ Editor mousedown DIRECT: Calling handleCommentClick for:', comment.id);
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          
+          // Clear any text selection
+          if ('getSelection' in window) {
+            window.getSelection()?.removeAllRanges();
+          }
+          
+          handleCommentClick(comment);
+          return;
+        }
+      }
       
-      // Look for comment highlights in the elements at click point
-      for (const element of elementsAtPoint) {
-        if (element.classList.contains('comment-highlight-tiptap')) {
-          const commentId = element.getAttribute('data-comment-id');
+      // Then check elements at point
+      try {
+        const elementsAtPoint = document.elementsFromPoint(event.clientX, event.clientY);
+        console.log('🔍 All elements at click point:', elementsAtPoint.map(el => ({ 
+          tag: el.tagName, 
+          classes: Array.from(el.classList || []),
+          isCommentHighlight: el.classList.contains('comment-highlight-tiptap'),
+          commentId: el.getAttribute('data-comment-id')
+        })));
+        
+        // Look for comment highlights in the elements at click point
+        for (const element of elementsAtPoint) {
+          if (element.classList.contains('comment-highlight-tiptap')) {
+            const commentId = element.getAttribute('data-comment-id');
+            const comment = comments.find(c => c.id === commentId);
+            
+            console.log('🎯 Found comment at click point:', { commentId, comment: !!comment, status: comment?.status });
+            
+            if (comment && comment.status !== 'resolved') {
+              console.log('✅ Editor mousedown ELEMENTS_AT_POINT: Calling handleCommentClick for:', comment.id);
+              event.preventDefault();
+              event.stopPropagation();
+              event.stopImmediatePropagation();
+              
+              // Clear any text selection
+              if ('getSelection' in window) {
+                window.getSelection()?.removeAllRanges();
+              }
+              
+              handleCommentClick(comment);
+              return;
+            }
+            break;
+          }
+        }
+      } catch (error) {
+        console.error('Error in elementsFromPoint:', error);
+      }
+      
+      // Finally check DOM traversal
+      let commentElement = target;
+      for (let i = 0; i < 5 && commentElement; i++) {
+        if (commentElement.classList?.contains('comment-highlight-tiptap')) {
+          const commentId = commentElement.getAttribute('data-comment-id');
           const comment = comments.find(c => c.id === commentId);
           
-          console.log('🎯 Found comment at click point:', { commentId, comment: !!comment, status: comment?.status });
+          console.log('🎯 Found comment via DOM traversal:', { commentId, comment: !!comment, level: i });
           
           if (comment && comment.status !== 'resolved') {
-            console.log('✅ Editor mousedown: Preventing default and calling handleCommentClick');
+            console.log('✅ Editor mousedown DOM_TRAVERSAL: Calling handleCommentClick for:', comment.id);
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
             
-            // Call our comment click handler directly
+            // Clear any text selection
+            if ('getSelection' in window) {
+              window.getSelection()?.removeAllRanges();
+            }
+            
             handleCommentClick(comment);
-            return false;
+            return;
           }
           break;
         }
+        commentElement = commentElement.parentElement as HTMLElement;
       }
+      
+      console.log('🔍 No comment highlight found at click location');
     };
 
-    // Add mousedown listener to the editor with high priority
+    // Add mousedown listener to the editor with high priority  
     editorElement.addEventListener('mousedown', handleEditorMouseDown, true);
+    console.log('✅ Mousedown listener attached to editor');
     
-    // Also add a click listener as backup
-    const handleEditorClick = (event: MouseEvent) => {
-      console.log('🎯 Editor click backup handler');
+    // Debug: Immediate check for comments and highlights
+    console.log('🔍 IMMEDIATE DEBUG CHECK:', {
+      commentsLength: comments.length,
+      commentsWithSelectedText: comments.filter(c => c.selected_text).length,
+      editorHasContent: !!editorElement.textContent,
+      editorContentLength: editorElement.textContent?.length || 0,
+      editorHtml: editorElement.innerHTML.substring(0, 200) + '...'
+    });
+    
+    // Add a global test function for manual debugging
+    (window as any).testCommentClick = () => {
+      const highlights = document.querySelectorAll('.comment-highlight-tiptap');
+      console.log('🧪 MANUAL TEST - Found highlights:', highlights.length);
+      
+      highlights.forEach((el, i) => {
+        const rect = el.getBoundingClientRect();
+        console.log(`🧪 Highlight ${i}:`, {
+          element: el,
+          commentId: el.getAttribute('data-comment-id'),
+          text: el.textContent?.substring(0, 30),
+          isVisible: rect.width > 0 && rect.height > 0,
+          position: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+          style: el.getAttribute('style'),
+          computedStyle: {
+            pointerEvents: getComputedStyle(el).pointerEvents,
+            cursor: getComputedStyle(el).cursor,
+            zIndex: getComputedStyle(el).zIndex
+          }
+        });
+      });
+      
+      if (highlights.length > 0) {
+        console.log('🧪 Try clicking on the first highlight programmatically...');
+        const firstHighlight = highlights[0] as HTMLElement;
+        const rect = firstHighlight.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // Simulate a click
+        const clickEvent = new MouseEvent('click', {
+          clientX: centerX,
+          clientY: centerY,
+          bubbles: true,
+          cancelable: true
+        });
+        firstHighlight.dispatchEvent(clickEvent);
+        console.log('🧪 Programmatic click dispatched!');
+      }
+    };
+    
+    console.log('🧪 Test function added! Type testCommentClick() in console to debug');
+    
+    // Also add it immediately to window for testing
+    setTimeout(() => {
+      (window as any).testCommentClick = (window as any).testCommentClick || (() => {
+        console.log('🧪 Emergency test function - searching entire document...');
+        const highlights = document.querySelectorAll('.comment-highlight-tiptap');
+        console.log('🧪 Found highlights in entire document:', highlights.length);
+        
+        if (highlights.length === 0) {
+          console.log('🚨 NO HIGHLIGHTS FOUND! Checking if comments exist in React state...');
+          console.log('🔍 Available global variables:', Object.keys(window).filter(k => k.includes('comment') || k.includes('Comment')));
+        }
+        
+        return highlights;
+      });
+    }, 1000);
+    
+    // Debug: Log comment highlights in DOM every few seconds
+    const debugInterval = setInterval(() => {
+      const highlights = editorElement.querySelectorAll('.comment-highlight-tiptap');
+      console.log('📋 Periodic highlight check:', {
+        highlightCount: highlights.length,
+        commentsCount: comments.length,
+        editorContentLength: editorElement.textContent?.length || 0
+      });
+      
+      if (highlights.length > 0) {
+        console.log('📋 Comment highlights in DOM:', Array.from(highlights).map(el => ({
+          id: el.getAttribute('data-comment-id'),
+          text: el.textContent?.substring(0, 20) + '...',
+          style: el.getAttribute('style'),
+          classes: Array.from(el.classList),
+          isVisible: el.offsetWidth > 0 && el.offsetHeight > 0
+        })));
+      }
+    }, 3000);
+    
+    // Test if ANY clicks are being detected
+    const handleEditorClickTest = (event: MouseEvent) => {
+      console.log('🔥 CLICK TEST: Any click detected on editor!', {
+        target: event.target,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        timestamp: Date.now()
+      });
       handleEditorMouseDown(event);
     };
     
-    editorElement.addEventListener('click', handleEditorClick, true);
+    editorElement.addEventListener('click', handleEditorClickTest, true);
+    console.log('✅ Click listener attached to editor');
 
     return () => {
       editorElement.removeEventListener('mousedown', handleEditorMouseDown, true);
-      editorElement.removeEventListener('click', handleEditorClick, true);
+      editorElement.removeEventListener('click', handleEditorClickTest, true);
+      clearInterval(debugInterval);
+      console.log('🧹 Click handlers removed from editor');
     };
   }, [editorRef, comments, handleCommentClick]);
 
@@ -2126,6 +2303,7 @@ const ArticleEditorComponent: React.FC<ArticleEditorProps> = ({
               adminMode={adminMode}
               adminUser={adminUser}
               inlineMode={true}
+              editor={editor}
             />
           </div>
         )}

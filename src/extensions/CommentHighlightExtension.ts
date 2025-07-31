@@ -172,6 +172,11 @@ export const CommentHighlightExtension = Extension.create<CommentHighlightOption
           console.log('✅ Direct hit: Calling onCommentClick for comment:', comment.id);
           event.preventDefault();
           event.stopPropagation();
+          event.stopImmediatePropagation();
+          // Also prevent text selection
+          if ('getSelection' in window) {
+            window.getSelection()?.removeAllRanges();
+          }
           this.storage.onCommentClick(comment);
           return;
         }
@@ -192,6 +197,11 @@ export const CommentHighlightExtension = Extension.create<CommentHighlightOption
             console.log('✅ elementsFromPoint: Calling onCommentClick for comment:', comment.id);
             event.preventDefault();
             event.stopPropagation();
+            event.stopImmediatePropagation();
+            // Also prevent text selection
+            if ('getSelection' in window) {
+              window.getSelection()?.removeAllRanges();
+            }
             this.storage.onCommentClick(comment);
             return;
           }
@@ -212,6 +222,11 @@ export const CommentHighlightExtension = Extension.create<CommentHighlightOption
             console.log('✅ DOM traversal: Calling onCommentClick for comment:', comment.id);
             event.preventDefault();
             event.stopPropagation();
+            event.stopImmediatePropagation();
+            // Also prevent text selection
+            if ('getSelection' in window) {
+              window.getSelection()?.removeAllRanges();
+            }
             this.storage.onCommentClick(comment);
             return;
           }
@@ -221,16 +236,19 @@ export const CommentHighlightExtension = Extension.create<CommentHighlightOption
       }
     };
     
-    // Add the listener with CAPTURE=true and HIGH PRIORITY to intercept before text selection
-    document.addEventListener('mousedown', this.globalClickHandler, true);
-    document.addEventListener('click', this.globalClickHandler, true);
+    // TEMPORARY: Disable global handlers to let ArticleEditor handle clicks
+    // The ArticleEditor already has comprehensive click handling
+    console.log('🔧 CommentHighlightExtension: Relying on ArticleEditor click handlers');
+    // document.addEventListener('mousedown', this.globalClickHandler, true);
+    // document.addEventListener('click', this.globalClickHandler, true);
   },
 
   onDestroy() {
-    // Clean up the global listeners
+    // Clean up global listeners (currently disabled)
     if (this.globalClickHandler) {
-      document.removeEventListener('mousedown', this.globalClickHandler, true);
-      document.removeEventListener('click', this.globalClickHandler, true);
+      // document.removeEventListener('mousedown', this.globalClickHandler, true);
+      // document.removeEventListener('click', this.globalClickHandler, true);
+      console.log('🔧 CommentHighlightExtension: Cleanup (handlers were disabled)');
     }
   },
 
@@ -297,6 +315,11 @@ export const CommentHighlightExtension = Extension.create<CommentHighlightOption
                         padding: 1px 2px;
                         margin: 0 1px;
                         cursor: pointer;
+                        pointer-events: auto;
+                        user-select: none;
+                        -webkit-user-select: none;
+                        -moz-user-select: none;
+                        -ms-user-select: none;
                         transition: background-color 0.2s ease, border-color 0.2s ease;
                       `,
                       title: `Comment by ${comment.user?.name || 'Unknown'}: ${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}`,
@@ -347,6 +370,32 @@ export const CommentHighlightExtension = Extension.create<CommentHighlightOption
             return false;
           },
           handleDOMEvents: {
+            mouseup(view, event) {
+              // Handle mouseup to catch the complete click cycle
+              console.log('🖱️ MouseUp event in CommentHighlightExtension:', event.target);
+              const target = event.target as HTMLElement;
+              
+              // Check if we're on a comment highlight
+              let commentElement = target;
+              for (let i = 0; i < 5 && commentElement; i++) {
+                if (commentElement.classList?.contains('comment-highlight-tiptap')) {
+                  const commentId = commentElement.getAttribute('data-comment-id');
+                  const comment = extension.storage.comments.find(c => c.id === commentId);
+                  
+                  if (comment && comment.status !== 'resolved') {
+                    console.log('✅ mouseup: Calling onCommentClick for comment:', comment.id);
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    extension.storage.onCommentClick(comment);
+                    return true;
+                  }
+                  break;
+                }
+                commentElement = commentElement.parentElement as HTMLElement;
+              }
+              return false;
+            },
             click(view, event) {
               console.log('🖱️ Click event in CommentHighlightExtension:', event.target);
               const target = event.target as HTMLElement;
@@ -415,11 +464,12 @@ export const CommentHighlightExtension = Extension.create<CommentHighlightOption
                     return false;
                   }
                   
-                  console.log('✅ Calling onCommentClick for active comment:', comment.id);
+                  console.log('✅ handleDOMEvents click: Calling onCommentClick for active comment:', comment.id);
                   event.preventDefault();
                   event.stopPropagation();
+                  event.stopImmediatePropagation(); // Stop ALL further event propagation
                   extension.storage.onCommentClick(comment);
-                  return true;
+                  return true; // Indicate we handled the event
                 } else {
                   console.warn('❌ Comment not found in storage for ID:', commentId);
                 }

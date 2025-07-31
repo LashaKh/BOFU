@@ -1,0 +1,11 @@
+# Task ID: 10
+# Title: Implement Image Upload and Insertion
+# Status: done
+# Dependencies: 3, 7
+# Priority: medium
+# Description: Create image upload functionality and insertion into the editor
+# Details:
+Add image extension to TipTap. Create image upload component with drag-and-drop support. Implement direct file selection via button. Add progress indicators for uploads. Connect to Supabase storage for image hosting. Create database entries in article_images table for uploaded images. Implement inline image insertion with resize handles. Add image caption and alt text editing.
+
+# Test Strategy:
+Test image uploads with various file types and sizes. Verify drag-and-drop functionality. Test upload progress indicators. Validate storage path creation and database entries. Test image rendering in the editor. Verify resize functionality and caption editing.

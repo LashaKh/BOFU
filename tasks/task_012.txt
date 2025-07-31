@@ -1,0 +1,11 @@
+# Task ID: 12
+# Title: Implement Undo/Redo Functionality
+# Status: done
+# Dependencies: 7
+# Priority: medium
+# Description: Add comprehensive undo/redo capabilities to the editor
+# Details:
+Configure TipTap history extension with appropriate depth. Implement undo/redo buttons in the toolbar. Add keyboard shortcuts (Ctrl+Z, Ctrl+Y/Ctrl+Shift+Z). Create visual indicators for undo/redo availability. Implement transaction batching for complex operations. Ensure history state persists across auto-saves. Add history navigation UI for jumping to specific history points.
+
+# Test Strategy:
+Test undo/redo with various edit types. Verify keyboard shortcuts. Test history with complex operations (tables, images). Validate history persistence across saves. Test edge cases like maximum history depth.

@@ -1056,18 +1056,27 @@ function App() {
 
               {/* Unified Article Editor - handles both user and admin access */}
               <Route path="/articles/:id" element={
-                isAuthLoading ? (
-                  <div className="min-h-screen bg-secondary-900 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto mb-4"></div>
-                      <p className="text-white">Loading...</p>
+                (() => {
+                  console.log('🔥 ROUTE DEBUG: /articles/:id matched', { isAuthLoading, hasUser: !!user });
+                  return isAuthLoading ? (
+                    <div className="min-h-screen bg-secondary-900 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                        <p className="text-white">Loading...</p>
+                      </div>
                     </div>
-                  </div>
-                ) : user ? (
-                  <UnifiedArticleEditor />
-                ) : (
-                  <Navigate to="/" replace />
-                )
+                  ) : user ? (
+                    (() => {
+                      console.log('🎯 ROUTE: Rendering UnifiedArticleEditor for authenticated user');
+                      return <UnifiedArticleEditor />;
+                    })()
+                  ) : (
+                    (() => {
+                      console.log('🚫 ROUTE: No user, redirecting to home');
+                      return <Navigate to="/" replace />;
+                    })()
+                  );
+                })()
               } />
 
               {/* Legacy routes - can be removed after testing */}
